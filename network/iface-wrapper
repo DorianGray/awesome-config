@@ -1,0 +1,12 @@
+#!/bin/sh
+iface=$1
+export SUDO_ASKPASS=/usr/lib/openssh/gnome-ssh-askpass
+if [ ! -z "$iface" ]; then
+  iface_status=$(nmcli device | grep $iface | awk '{ print $3 }')
+  echo $iface_status
+  if [ "$iface_status" = "connected" ]; then
+    sudo nmcli device disconnect $iface
+  else
+    sudo nmcli device connect $iface
+  fi
+fi
