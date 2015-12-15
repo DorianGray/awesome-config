@@ -6,6 +6,7 @@ local wibox     = require 'wibox'
 local beautiful = require 'beautiful'
 local naughty   = require 'naughty'
 local lain      = require 'lain'
+local DIR = require 'pl.path'.dirname(debug.getinfo(1,'S').source:sub(2))
 
 -- Error handling
 if awesome.startup_errors then
@@ -427,6 +428,7 @@ awful.key({ }, "XF86AudioRaiseVolume",  volumewidget.Up),
 awful.key({ }, "XF86AudioLowerVolume",  volumewidget.Down),
 awful.key({ }, "XF86AudioMute",         volumewidget.ToggleMute),
 
+awful.key({ }, "XF86PowerOff",          function() awful.util.spawn(DIR.."/syscontrol.sh") end),
 -- Lock screen
 awful.key({'Control', altkey}, 'l' , function ()
   local command = 'gnome-screensaver-command -l'
