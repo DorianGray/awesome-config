@@ -210,9 +210,6 @@ local function unique_wifi(wifi)
 end
 
 local function generate_menu(cb)
-  o.connected = false
-  o.signal = 0
-  o.ssid = ''
   --generate the network menu
   local networks = {}
   local wifi_list = {}
@@ -226,6 +223,10 @@ local function generate_menu(cb)
       end
       if iface[2] == 'wifi' then
         get_area_wifi(function(area_wifi)
+          o.connected = false
+          o.signal = 0
+          o.ssid = ''
+          o.security = nil
           area_wifi = unique_wifi(area_wifi)
           table.sort(area_wifi, function(a,b) return (tonumber(a[3]) or 100) > (tonumber(b[3]) or 100) end)
           for i, lt in ipairs(area_wifi) do
