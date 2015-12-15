@@ -6,17 +6,9 @@ local beautiful = require 'beautiful'
 local string = require 'string'
 local table = require 'table'
 local asyncshell = require 'lain.asyncshell'
-local DIR = require 'pl.path'.dirname(debug.getinfo(1,'S').source:sub(2))
 
 local COMMAND_LIST_IFACE_STATES = 'nmcli device'
 local COMMAND_LIST_WIFIS = 'nmcli --fields SECURITY,SSID,SIGNAL,IN-USE device wifi'
-local COMMAND_IFACE = DIR..'/iface-wrapper'
-local DIR = require 'pl.path'.dirname(debug.getinfo(1,'S').source:sub(2))
-
-local COMMAND_CHECK_WIFILIST_EXISTS = ''
-local COMMAND_CAT_GPG_CIPHERTEXT = ''
-local COMMAND_DECIPHER_GPG_NETPASSWDS = ''
-
 
 local o = {connected=false, signal=0, ssid=''}
 
@@ -91,6 +83,28 @@ local function connect_wifi(ssid, mypromptbox, cb)
   end)
 end
 
+local function toggle_interface(iface, cb)
+  get_local_interfaces(function(interfaces)
+    for _, interface in pairs(interfaces) do
+      if interface[1] == iface then 
+        local action = iface[2] == 'connected' and 'disconnect' or 'connect'
+        run('nmcli device '..action..' '..iface, function(output)
+          cb(output)
+        end)
+      end
+    end
+  end)
+end
+
+local function toggle_wifi(cb)
+  run('nmcli radio wifi', function(output)
+    local action = trim(output) == 'enabled' and 'off' or 'on'
+    run('nmcli radio wifi '..action, function(output)
+      cb(output)
+    end)
+  end)
+end
+
 local function generate_line(lengths, fields, lt, skip_replace)
   local line = {}
   for i, len in ipairs(lengths) do
@@ -142,7 +156,13 @@ local function generate_iface_line(lt, skip_replace)
   }
   local fields = {
     function(v)
-      return ' '..(v:match('connected') and '✓' or v:match('disconnected') and 'x' or '?') 
+      local val = ' '
+      if v:match('connected') then
+        val = '✓'
+      elseif v:match('disconnected') or v:match('unavailable') then
+        val = 'x'
+      end
+      return ' '..val
     end,
     function(v, list)
       return " ├╴"..v
@@ -237,7 +257,7 @@ local function generate_menu(cb, mypromptbox)
             end
           end
           local ud = {'Toggle Interface', function()
-            run(COMMAND_IFACE..' '..iface[1], function()
+            toggle_wifi(function()
               generate_menu(cb, mypromptbox)
             end)
           end}
@@ -248,7 +268,7 @@ local function generate_menu(cb, mypromptbox)
         end)
       elseif key ~= 1 then
         local face = {generate_iface_line(iface), function()
-          run(COMMAND_IFACE..' '..iface[1], function()
+          toggle_interface(iface[1], function()
             generate_menu(cb, mypromptbox)
           end)
         end}
