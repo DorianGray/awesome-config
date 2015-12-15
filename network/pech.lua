@@ -10,7 +10,6 @@ local DIR = require 'pl.path'.dirname(debug.getinfo(1,'S').source:sub(2))
 
 local COMMAND_LIST_IFACE_STATES = 'nmcli device'
 local COMMAND_LIST_WIFIS = 'nmcli --fields SECURITY,SSID,SIGNAL,IN-USE device wifi'
-local COMMAND_WIFI_CONNECT = DIR..'/connect-wrapper'
 local COMMAND_IFACE = DIR..'/iface-wrapper'
 local DIR = require 'pl.path'.dirname(debug.getinfo(1,'S').source:sub(2))
 
@@ -66,6 +65,29 @@ end
 function o.get_area_wifi(cb)
   run(COMMAND_LIST_WIFIS, function(output)
     cb(parse_command(output))
+  end)
+end
+
+local function connect_wifi(ssid, mypromptbox, cb)
+  run('nmcli --fields NAME connection', function(output)
+    local ot = parse_command(output)
+    local found = false
+    for _, v in pairs(ot) do
+      if v[1] == ssid then
+        found = true
+        break
+      end
+    end
+    if found then
+      run('nmcli connection up '..ssid, function(output) end)
+    else
+      awful.prompt.run({ prompt = "Password for "..ssid..": " },
+      mypromptbox[mouse.screen].widget, function(password)
+        run('nmcli device wifi connect '..ssid..' password '..password, function(output)
+          cb(output)
+        end)
+      end)
+    end
   end)
 end
 
@@ -174,14 +196,10 @@ function o.generate_network_menu(cb, mypromptbox)
             local work = {
               generate_wifi_line(lt),
               function()
-                awful.prompt.run({ prompt = "Password for "..lt[2]..": " },
-                mypromptbox[mouse.screen].widget, function(password)
-                  run(COMMAND_WIFI_CONNECT..' '..lt[2]..' '..password, function()
-                    o.generate_network_menu(cb, mypromptbox)
-                  end)
+                connect_wifi(lt[2], mypromptbox, function()
+                  o.generate_network_menu(cb, mypromptbox)
                 end)
               end,
-              o.icon_from_signal(tonumber(lt[3]))
             }
 
             if i > 1 then
