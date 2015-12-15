@@ -2,6 +2,7 @@ local wibox = require 'wibox'
 local beautiful = require 'beautiful'
 local awful = require 'awful'
 local lain = require 'lain'
+local layouts  = require 'layouts'
 
 return function(widgets, icons, boxes, taglist)
   -- Wibox

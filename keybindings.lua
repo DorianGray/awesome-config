@@ -88,15 +88,15 @@ return function(boxes, widgets)
   awful.key({ modkey, 'Shift'   }, 'q',      awesome.quit),
 
   -- Brightness
-  awful.key({ }, "XF86MonBrightnessDown", function () awful.util.spawn("xbacklight -dec 15") end),
-  awful.key({ }, "XF86MonBrightnessUp", function () awful.util.spawn("xbacklight -inc 15") end),
+  awful.key({ }, "XF86MonBrightnessDown", function () awful.spawn("xbacklight -dec 15") end),
+  awful.key({ }, "XF86MonBrightnessUp", function () awful.spawn("xbacklight -inc 15") end),
 
   -- Audio
   awful.key({ }, "XF86AudioRaiseVolume",  widgets.volume.Up),
   awful.key({ }, "XF86AudioLowerVolume",  widgets.volume.Down),
   awful.key({ }, "XF86AudioMute",         widgets.volume.ToggleMute),
 
-  awful.key({ }, "XF86PowerOff",          function() awful.util.spawn(DIR.."/syscontrol.sh") end),
+  awful.key({ }, "XF86PowerOff",          function() awful.spawn(DIR.."/syscontrol.sh") end),
   -- Lock screen
   awful.key({'Control', altkey}, 'l' , function ()
     local command = 'gnome-screensaver-command -l'
