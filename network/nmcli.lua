@@ -55,14 +55,14 @@ local function parse_command(input)
 end
 
 --Make a table of the local interfaces
-function o.get_local_interfaces(cb)
+local function get_local_interfaces(cb)
   run(COMMAND_LIST_IFACE_STATES, function(output)
     cb(parse_command(output))
   end)
 end
 
 --make a table of the scanned wifis
-function o.get_area_wifi(cb)
+local function get_area_wifi(cb)
   run(COMMAND_LIST_WIFIS, function(output)
     cb(parse_command(output))
   end)
@@ -131,19 +131,21 @@ local function generate_wifi_line(lt, skip_replace)
 end
 
 local function generate_iface_line(lt, skip_replace)
+  lt = {lt[3], lt[1], lt[4]}
+  if lt[2] == lt[3] then
+    lt[3] = ''
+  end
   local lengths = {
-    15,
-    false,
+    -1,
     -1,
     -1,
   }
   local fields = {
+    function(v)
+      return ' '..(v:match('connected') and '✓' or v:match('disconnected') and 'x' or '?') 
+    end,
     function(v, list)
       return " ├╴"..v
-    end,
-    nil,
-    function(v)
-      return v:match('connected') and '✓' or v:match('unmanaged') and 'o' or 'x' 
     end,
     function(v)
       if v:match('%-%-') then
@@ -156,7 +158,7 @@ local function generate_iface_line(lt, skip_replace)
   return generate_line(lengths, fields, lt, skip_replace)
 end
 
-function o.icon_from_signal(signal)
+local function icon_from_signal(signal)
   if not signal then
     return nil
   end
@@ -173,14 +175,31 @@ function o.icon_from_signal(signal)
   end
 end
 
-function o.generate_network_menu(cb, mypromptbox)
+local function unique_wifi(wifi)
+  local ssids = {}
+  for _, v in pairs(wifi) do
+    local ssid = ssids[v[2]]
+    if not ssid then
+      ssids[v[2]] = v
+    elseif v[4] == "*" or (ssid[4] ~= "*" and tonumber(v[3]) > tonumber(ssid[3])) then
+      ssids[v[2]] = v
+    end
+  end
+  local res = {}
+  for _, v in pairs(ssids) do
+    res[#res+1] = v
+  end
+  return res
+end
+
+local function generate_menu(cb, mypromptbox)
   o.connected = false
   o.signal = 0
   o.ssid = ''
   --generate the network menu
   local networks = {}
   local wifi_list = {}
-  o.get_local_interfaces(function(local_interfaces)
+  get_local_interfaces(function(local_interfaces)
     table.sort(local_interfaces, function(a, b) return a[2] < b[2] end)
     local last_iface = nil
     for key, iface in ipairs(local_interfaces) do
@@ -189,26 +208,27 @@ function o.generate_network_menu(cb, mypromptbox)
         table.insert(networks, {last_iface:upper()})
       end
       if iface[2] == 'wifi' then
-        o.get_area_wifi(function(area_wifi)
+        get_area_wifi(function(area_wifi)
+          area_wifi = unique_wifi(area_wifi)
           table.sort(area_wifi, function(a,b) return (tonumber(a[3]) or 100) > (tonumber(b[3]) or 100) end)
           for i, lt in ipairs(area_wifi) do
-            local textbox = wibox.widget.textbox()
+            local ssid, signal, security = lt[2], tonumber(lt[3]), lt[1]
             local work = {
               generate_wifi_line(lt),
               function()
-                connect_wifi(lt[2], mypromptbox, function()
-                  o.generate_network_menu(cb, mypromptbox)
+                connect_wifi(ssid, mypromptbox, function()
+                  generate_menu(cb, mypromptbox)
                 end)
               end,
+              icon_from_signal(signal)
             }
 
             if i > 1 then
               if lt[4] == '*' then
-                local ssid, signal, security = lt[2], lt[3], lt[1]
-                o.ssid = trim(ssid)
                 o.connected = true
-                o.signal = tonumber(signal)
-                o.security = trim(security)
+                o.signal = signal
+                o.ssid = ssid
+                o.security = security
               else
                 table.insert(wifi_list, work)
               end
@@ -218,7 +238,7 @@ function o.generate_network_menu(cb, mypromptbox)
           end
           local ud = {'Toggle Interface', function()
             run(COMMAND_IFACE..' '..iface[1], function()
-              o.generate_network_menu(cb, mypromptbox)
+              generate_menu(cb, mypromptbox)
             end)
           end}
           table.insert(wifi_list, ud)
@@ -229,7 +249,7 @@ function o.generate_network_menu(cb, mypromptbox)
       elseif key ~= 1 then
         local face = {generate_iface_line(iface), function()
           run(COMMAND_IFACE..' '..iface[1], function()
-            o.generate_network_menu(cb, mypromptbox)
+            generate_menu(cb, mypromptbox)
           end)
         end}
         table.insert(networks, face)
@@ -237,6 +257,39 @@ function o.generate_network_menu(cb, mypromptbox)
       cb(networks)
     end
   end)
+end
+
+function o.widget(mypromptbox)
+  local function menu(args, widget)
+    generate_menu(function(items)
+      args.menu = awful.menu({
+        theme = {
+          height = 16,
+          width = 150,
+        },
+        items = items
+      })
+      widget:set_image(icon_from_signal(o.signal))
+      if not o.connected then
+        widget:set_image(beautiful.widget_net_dc)
+      else
+        widget:set_image(icon_from_signal(o.signal))
+      end
+    end,
+    mypromptbox)
+  end
+
+  local args = {
+    image = beautiful.widget_net,
+    menu = awful.menu(),
+  }
+
+  local widget = awful.widget.launcher(args)
+  menu(args, widget)
+  local t = timer({timeout = 300})
+  t:connect_signal("timeout", function() menu(args, widget) end)
+  t:start()
+  return widget
 end
 
 return o
