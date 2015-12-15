@@ -9,7 +9,7 @@ local asyncshell = require 'lain.asyncshell'
 local DIR = require 'pl.path'.dirname(debug.getinfo(1,'S').source:sub(2))
 
 local COMMAND_LIST_IFACE_STATES = 'nmcli device'
-local COMMAND_LIST_WIFIS = 'nmcli --fields SECURITY,SSID,SIGNAL,IN-USE,BSSID device wifi'
+local COMMAND_LIST_WIFIS = 'nmcli --fields SECURITY,SSID,SIGNAL,IN-USE device wifi'
 local COMMAND_WIFI_CONNECT = DIR..'/connect-wrapper'
 local COMMAND_IFACE = DIR..'/iface-wrapper'
 local DIR = require 'pl.path'.dirname(debug.getinfo(1,'S').source:sub(2))
@@ -96,15 +96,12 @@ local function generate_wifi_line(lt, skip_replace)
     -1,
     false,
     false,
-    false,
   }
   local fields = {
     function(v)
       return v:match('[^-]') and '✓ ' or 'x ' 
     end,
     true,
-    false,
-    false,
     false,
   }
 
@@ -179,7 +176,7 @@ function o.generate_network_menu(cb, mypromptbox)
               function()
                 awful.prompt.run({ prompt = "Password for "..lt[2]..": " },
                 mypromptbox[mouse.screen].widget, function(password)
-                  run(COMMAND_WIFI_CONNECT..' '..lt[5]..' '..password, function()
+                  run(COMMAND_WIFI_CONNECT..' '..lt[2]..' '..password, function()
                     o.generate_network_menu(cb, mypromptbox)
                   end)
                 end)
@@ -198,7 +195,7 @@ function o.generate_network_menu(cb, mypromptbox)
                 table.insert(wifi_list, work)
               end
             else
-              table.insert(wifi_list, {generate_wifi_line({'🔒 ', 'SSID'}, true)})
+              table.insert(wifi_list, {generate_wifi_line({'🔒 ', 'SSID', nil, nil}, true)})
             end
           end
           local ud = {'Toggle Interface', function()
