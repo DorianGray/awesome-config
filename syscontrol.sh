@@ -5,7 +5,7 @@ ACTION=`zenity --width=90 --height=200 --list --radiolist --text="Select logout 
 if [ -n "${ACTION}" ];then
   case $ACTION in
   Shutdown)
-    zenity --question --text "Are you sure you want to halt?" && gksudo halt
+    zenity --question --text "Are you sure you want to shutdown?" && gksudo poweroff
     ;;
   Reboot)
     zenity --question --text "Are you sure you want to reboot?" && gksudo reboot
