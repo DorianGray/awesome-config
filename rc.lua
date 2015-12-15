@@ -179,7 +179,7 @@ local mylayoutbox = {}
 local mytaglist = {}
 
 -- Net
-local netwidget = require 'network.nmcli'.widget(mypromptbox)
+local netwidget = require 'widget.net'.widget(mypromptbox)
 
 -- Separators
 local spr = wibox.widget.textbox(' ')
