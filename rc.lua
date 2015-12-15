@@ -179,43 +179,39 @@ local mytaglist = {}
 
 -- Net
 local netmgr = require 'network.pech'
-local callback
-local function mynetworkmenu()
-  return awful.menu({
-    theme = {
-      height = 16,
-      width = 200,
-    },
-    items = netmgr.generate_network_menu(function() return callback() end, mypromptbox)
-  })
-end
-local netwidget_args = {
-  image = beautiful.widget_net,
-  menu = mynetworkmenu(),
-}
-local function make_net_widget()
-  local netwidget = awful.widget.launcher(netwidget_args)
-  netwidget:set_image(netmgr.icon_from_signal(netmgr.signal))
-  if not netmgr.connected then
-    netwidget:set_image(beautiful.widget_net_dc)
-  else
+
+local function mynetworkmenu(netwidget_args, netwidget)
+  netmgr.generate_network_menu(function(items)
+    netwidget_args.menu = awful.menu({
+      theme = {
+        height = 16,
+        width = 200,
+      },
+      items = items
+    })
     netwidget:set_image(netmgr.icon_from_signal(netmgr.signal))
-  end
+    if not netmgr.connected then
+      netwidget:set_image(beautiful.widget_net_dc)
+    else
+      netwidget:set_image(netmgr.icon_from_signal(netmgr.signal))
+    end
+  end,
+  mypromptbox)
+end
+
+local function make_net_widget()
+  local netwidget_args = {
+    image = beautiful.widget_net,
+    menu = awful.menu(),
+  }
+  local netwidget = awful.widget.launcher(netwidget_args)
+  mynetworkmenu(netwidget_args, netwidget)
   return netwidget
 end
 
 local netwidget = make_net_widget()
-callback = function()
-  netwidget_args.menu = mynetworkmenu()
-  if not netmgr.connected then
-    netwidget:set_image(beautiful.widget_net_dc)
-  else
-    netwidget:set_image(netmgr.icon_from_signal(netmgr.signal))
-  end
-end
-
-local nettimer = timer({timeout = 360})
-nettimer:connect_signal("timeout", callback)
+local nettimer = timer({timeout = 300})
+nettimer:connect_signal("timeout", function() mynetworkmenu(netwidget_args, netwidget) end)
 nettimer:start()
 
 -- Separators

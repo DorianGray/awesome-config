@@ -21,14 +21,7 @@ local COMMAND_DECIPHER_GPG_NETPASSWDS = ''
 
 local o = {connected=false, signal=0, ssid=''}
 
-local function run(cmd)
-  local p = io.popen(cmd)
-  local data = p:read('*a')
-  p:close()
-  return data
-end
-
-local function run_async(command, callback)
+local function run(command, callback)
   return asyncshell.request(command, callback)
 end
 
@@ -63,13 +56,17 @@ local function parse_command(input)
 end
 
 --Make a table of the local interfaces
-function o.get_local_interfaces()
-  return parse_command(run(COMMAND_LIST_IFACE_STATES))
+function o.get_local_interfaces(cb)
+  run(COMMAND_LIST_IFACE_STATES, function(output)
+    cb(parse_command(output))
+  end)
 end
 
 --make a table of the scanned wifis
-function o.get_area_wifi()
-  return parse_command(run(COMMAND_LIST_WIFIS))
+function o.get_area_wifi(cb)
+  run(COMMAND_LIST_WIFIS, function(output)
+    cb(parse_command(output))
+  end)
 end
 
 local function generate_line(lengths, fields, lt, skip_replace)
@@ -161,58 +158,67 @@ function o.generate_network_menu(cb, mypromptbox)
   --generate the network menu
   local networks = {}
   local wifi_list = {}
-  local local_interfaces = o.get_local_interfaces()
-  table.sort(local_interfaces, function(a, b) return a[2] < b[2] end)
-  local last_iface = nil
-  for key, iface in ipairs(local_interfaces) do
-    if key ~= 1 and last_iface ~= iface[2] then
-      last_iface = iface[2]
-      table.insert(networks, {last_iface:upper()})
-    end
-    if iface[2] == 'wifi' then
-      local area_wifi = o.get_area_wifi()
-      table.sort(area_wifi, function(a,b) return (tonumber(a[3]) or 100) > (tonumber(b[3]) or 100) end)
-      for i, lt in ipairs(area_wifi) do
-        local textbox = wibox.widget.textbox()
-        local work = {
-          generate_wifi_line(lt),
-          function()
-            awful.prompt.run({ prompt = "Password for "..lt[2]..": " },
-            mypromptbox[mouse.screen].widget, function(password)
-              run_async(COMMAND_WIFI_CONNECT..' '..lt[2]..' '..password, cb)
-            end)
-          end,
-          o.icon_from_signal(tonumber(lt[3]))
-        }
-
-        if i > 1 then
-          if lt[4] == '*' then
-            local ssid, signal, security = lt[2], lt[3], lt[1]
-            o.ssid = trim(ssid)
-            o.connected = true
-            o.signal = tonumber(signal)
-            o.security = trim(security)
-          else
-            table.insert(wifi_list, work)
-          end
-        else
-          table.insert(wifi_list, {generate_wifi_line({'🔒 ', 'SSID', nil, nil}, true)})
-        end
+  o.get_local_interfaces(function(local_interfaces)
+    table.sort(local_interfaces, function(a, b) return a[2] < b[2] end)
+    local last_iface = nil
+    for key, iface in ipairs(local_interfaces) do
+      if key ~= 1 and last_iface ~= iface[2] then
+        last_iface = iface[2]
+        table.insert(networks, {last_iface:upper()})
       end
-      local ud = {'Toggle Interface', function()
-        run_async(COMMAND_IFACE..' '..iface[1], cb)
-      end}
-      table.insert(wifi_list, ud)
-      local face = {generate_iface_line(iface), wifi_list}
-      table.insert(networks, face)
-    elseif key ~= 1 then
-      local face = {generate_iface_line(iface), function()
-        run_async(COMMAND_IFACE..' '..iface[1], cb)
-      end}
-      table.insert(networks, face)
+      if iface[2] == 'wifi' then
+        o.get_area_wifi(function(area_wifi)
+          table.sort(area_wifi, function(a,b) return (tonumber(a[3]) or 100) > (tonumber(b[3]) or 100) end)
+          for i, lt in ipairs(area_wifi) do
+            local textbox = wibox.widget.textbox()
+            local work = {
+              generate_wifi_line(lt),
+              function()
+                awful.prompt.run({ prompt = "Password for "..lt[2]..": " },
+                mypromptbox[mouse.screen].widget, function(password)
+                  run(COMMAND_WIFI_CONNECT..' '..lt[2]..' '..password, function()
+                    o.generate_network_menu(cb, mypromptbox)
+                  end)
+                end)
+              end,
+              o.icon_from_signal(tonumber(lt[3]))
+            }
+
+            if i > 1 then
+              if lt[4] == '*' then
+                local ssid, signal, security = lt[2], lt[3], lt[1]
+                o.ssid = trim(ssid)
+                o.connected = true
+                o.signal = tonumber(signal)
+                o.security = trim(security)
+              else
+                table.insert(wifi_list, work)
+              end
+            else
+              table.insert(wifi_list, {generate_wifi_line({'🔒 ', 'SSID', nil, nil}, true)})
+            end
+          end
+          local ud = {'Toggle Interface', function()
+            run(COMMAND_IFACE..' '..iface[1], function()
+              o.generate_network_menu(cb, mypromptbox)
+            end)
+          end}
+          table.insert(wifi_list, ud)
+          local face = {generate_iface_line(iface), wifi_list}
+          table.insert(networks, face)
+          cb(networks)
+        end)
+      elseif key ~= 1 then
+        local face = {generate_iface_line(iface), function()
+          run(COMMAND_IFACE..' '..iface[1], function()
+            o.generate_network_menu(cb, mypromptbox)
+          end)
+        end}
+        table.insert(networks, face)
+      end
+      cb(networks)
     end
-  end
-  return networks
+  end)
 end
 
 return o
