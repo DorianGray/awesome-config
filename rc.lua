@@ -179,6 +179,10 @@ local mytaglist = {}
 
 -- Net
 local netmgr = require 'network.pech'
+local netwidget_args = {
+  image = beautiful.widget_net,
+  menu = awful.menu(),
+}
 
 local function mynetworkmenu(netwidget_args, netwidget)
   netmgr.generate_network_menu(function(items)
@@ -200,10 +204,6 @@ local function mynetworkmenu(netwidget_args, netwidget)
 end
 
 local function make_net_widget()
-  local netwidget_args = {
-    image = beautiful.widget_net,
-    menu = awful.menu(),
-  }
   local netwidget = awful.widget.launcher(netwidget_args)
   mynetworkmenu(netwidget_args, netwidget)
   return netwidget
