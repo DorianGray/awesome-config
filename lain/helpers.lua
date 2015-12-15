@@ -7,8 +7,8 @@
 --]]
 
 local debug  = require("debug")
-
-local capi   = { timer = timer }
+local gears  = require 'gears'
+local capi   = { timer = gears.timer }
 local io     = { open  = io.open,
                  lines = io.lines,
                  popen = io.popen }

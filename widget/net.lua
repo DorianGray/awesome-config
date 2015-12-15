@@ -1,14 +1,11 @@
 local wibox = require 'wibox'
-local m
 local awful = require 'awful'
+local gears = require 'gears'
 local naughty = require 'naughty'
 local beautiful = require 'beautiful'
 local string = require 'string'
 local table = require 'table'
 local asyncshell = require 'lain.asyncshell'
-
-local COMMAND_LIST_IFACE_STATES = 'nmcli device'
-local COMMAND_LIST_WIFIS = 'nmcli --fields SECURITY,SSID,SIGNAL,IN-USE device wifi'
 
 local o = {connected=false, signal=0, ssid=''}
 
@@ -48,19 +45,19 @@ end
 
 --Make a table of the local interfaces
 local function get_local_interfaces(cb)
-  run(COMMAND_LIST_IFACE_STATES, function(output)
+  run('nmcli device', function(output)
     cb(parse_command(output))
   end)
 end
 
 --make a table of the scanned wifis
 local function get_area_wifi(cb)
-  run(COMMAND_LIST_WIFIS, function(output)
+  run('nmcli --fields SECURITY,SSID,SIGNAL,IN-USE device wifi', function(output)
     cb(parse_command(output))
   end)
 end
 
-local function connect_wifi(ssid, mypromptbox, cb)
+local function connect_wifi(ssid, cb)
   run('nmcli --fields NAME connection', function(output)
     local ot = parse_command(output)
     local found = false
@@ -74,7 +71,7 @@ local function connect_wifi(ssid, mypromptbox, cb)
       run('nmcli connection up '..ssid, function(output) end)
     else
       awful.prompt.run({ prompt = "Password for "..ssid..": " },
-      mypromptbox[mouse.screen].widget, function(password)
+      o.promptbox[mouse.screen].widget, function(password)
         run('nmcli device wifi connect '..ssid..' password '..password, function(output)
           cb(output)
         end)
@@ -212,7 +209,7 @@ local function unique_wifi(wifi)
   return res
 end
 
-local function generate_menu(cb, mypromptbox)
+local function generate_menu(cb)
   o.connected = false
   o.signal = 0
   o.ssid = ''
@@ -236,8 +233,8 @@ local function generate_menu(cb, mypromptbox)
             local work = {
               generate_wifi_line(lt),
               function()
-                connect_wifi(ssid, mypromptbox, function()
-                  generate_menu(cb, mypromptbox)
+                connect_wifi(ssid, function()
+                  generate_menu(cb)
                 end)
               end,
               icon_from_signal(signal)
@@ -258,7 +255,7 @@ local function generate_menu(cb, mypromptbox)
           end
           local ud = {'Toggle Interface', function()
             toggle_wifi(function()
-              generate_menu(cb, mypromptbox)
+              generate_menu(cb)
             end)
           end}
           table.insert(wifi_list, ud)
@@ -269,7 +266,7 @@ local function generate_menu(cb, mypromptbox)
       elseif key ~= 1 then
         local face = {generate_iface_line(iface), function()
           toggle_interface(iface[1], function()
-            generate_menu(cb, mypromptbox)
+            generate_menu(cb)
           end)
         end}
         table.insert(networks, face)
@@ -279,7 +276,8 @@ local function generate_menu(cb, mypromptbox)
   end)
 end
 
-function o.widget(mypromptbox)
+function o.widget(promptbox)
+  o.promptbox = promptbox
   local function menu(args, widget)
     generate_menu(function(items)
       args.menu = awful.menu({
@@ -295,8 +293,7 @@ function o.widget(mypromptbox)
       else
         widget:set_image(icon_from_signal(o.signal))
       end
-    end,
-    mypromptbox)
+    end)
   end
 
   local args = {
@@ -306,7 +303,7 @@ function o.widget(mypromptbox)
 
   local widget = awful.widget.launcher(args)
   menu(args, widget)
-  local t = timer({timeout = 300})
+  local t = gears.timer({timeout = 300})
   t:connect_signal("timeout", function() menu(args, widget) end)
   t:start()
   return widget

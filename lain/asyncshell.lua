@@ -52,7 +52,7 @@ function asyncshell.request(command, callback, timeout)
         id, formatted_command
     )
 
-    awful.util.spawn_with_shell(req)
+    awful.spawn.with_shell(req)
 
     if timeout then
         asyncshell.request_table[id].timer = timer({ timeout = timeout })
