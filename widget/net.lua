@@ -265,7 +265,7 @@ local function generate_wifi_menu(iface, networks, cb)
       end)
     end}
     table.insert(wifi_list, ud)
-    local ud = {'Refresh', function()
+    local ud = {'Rescan', function()
       generate_menu(cb)
     end}
     table.insert(wifi_list, ud)
