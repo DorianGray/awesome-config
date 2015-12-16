@@ -7,8 +7,9 @@ local string = require 'string'
 local table = require 'table'
 local asyncshell = require 'lain.asyncshell'
 local icons = require 'widget.icon.wifi'(16,16)
+local lgi = require("lgi")
 
-local o = {connected=false, signal=0, ssid=''}
+local o = {connected=false, signal=0}
 
 local function run(command, callback)
   return asyncshell.request(command, callback)
@@ -42,6 +43,12 @@ local function parse_command(input)
     t[#t+1] = result
   end
   return t
+end
+
+local function get_net_status(cb)
+  run('ping -c 1 8.8.8.8 | grep \'100% packet loss\'', function(output)
+    cb(output == "")
+  end)
 end
 
 --Make a table of the local interfaces
@@ -176,11 +183,6 @@ local function generate_iface_line(lt, skip_replace)
   return generate_line(lengths, fields, lt, skip_replace)
 end
 
-local function icon_from_signal(signal)
-  if not signal then return signal end
-  return icons[math.floor(signal / 25)+1]
-end
-
 local function unique_wifi(wifi)
   local ssids = {}
   for _, v in pairs(wifi) do
@@ -203,31 +205,30 @@ local generate_menu
 local function generate_wifi_menu(iface, networks, cb)
   get_area_wifi(function(area_wifi)
     local wifi_list = {}
-    o.connected = false
-    o.signal = 0
-    o.ssid = ''
-    o.security = nil
+    local wificonnected = false
+    local wifisignal = 0
+    local wifissid = ''
+    local wifisecurity = nil
     area_wifi = unique_wifi(area_wifi)
     table.sort(area_wifi, function(a,b) return (tonumber(a[3]) or 100) > (tonumber(b[3]) or 100) end)
     for i, lt in ipairs(area_wifi) do
-      local ssid, signal, security = lt[2], tonumber(lt[3]), lt[1]
-      local work = {
-        generate_wifi_line(lt),
-        function()
-          connect_wifi(ssid, function()
-            generate_menu(cb)
-          end)
-        end,
-        icon_from_signal(signal)
-      }
-
-      if i > 1 then
-        if lt[4] == '*' then
-          o.connected = true
-          o.signal = signal
-          o.ssid = ssid
-          o.security = security
+      local ssid, signal, security, in_use = lt[2], tonumber(lt[3]), lt[1], lt[4]
+      if signal then
+        if in_use == '*' then
+          wificonnected = true
+          wifisignal = signal
+          wifissid = ssid
+          wifisecurity = security
         else
+          local work = {
+            generate_wifi_line(lt),
+            function()
+              connect_wifi(ssid, function()
+                generate_menu(cb)
+              end)
+            end,
+            icons.from_signal(signal)
+          }
           table.insert(wifi_list, work)
         end
       else
@@ -242,6 +243,10 @@ local function generate_wifi_menu(iface, networks, cb)
     table.insert(wifi_list, ud)
     local face = {generate_iface_line(iface), wifi_list}
     table.insert(networks, face)
+    o.connected = wificonnected
+    o.signal = wifisignal
+    o.ssid = wifissid
+    o.security = wifisecurity
     cb(networks)
   end)
 end
@@ -276,28 +281,28 @@ local function generate_menu(cb)
   end)
 end
 
+local function menu(args, widget)
+  generate_menu(function(items)
+    args.menu = awful.menu({
+      theme = {
+        height = 16,
+        width = 150,
+      },
+      items = items
+    })
+    if not o.connected then
+      widget:set_image(icons.disconnected)
+    else
+      widget:set_image(icons.from_signal(o.signal))
+    end
+  end)
+end
+
 function o.widget(promptbox)
   o.promptbox = promptbox
-  local function menu(args, widget)
-    generate_menu(function(items)
-      args.menu = awful.menu({
-        theme = {
-          height = 16,
-          width = 150,
-        },
-        items = items
-      })
-      widget:set_image(icon_from_signal(o.signal))
-      if not o.connected then
-        widget:set_image(beautiful.widget_net_dc)
-      else
-        widget:set_image(icon_from_signal(o.signal))
-      end
-    end)
-  end
 
   local args = {
-    image = beautiful.widget_net,
+    image = icons.from_signal(0, true),
     menu = awful.menu(),
   }
 
@@ -305,6 +310,15 @@ function o.widget(promptbox)
   menu(args, widget)
   local t = gears.timer({timeout = 300})
   t:connect_signal("timeout", function() menu(args, widget) end)
+  t:start()
+  local t = gears.timer({timeout = 10})
+  t:connect_signal("timeout", function()
+    get_net_status(function(up)
+      if not up then
+        widget:set_image(icons.from_signal(o.signal, true))
+      end
+    end)
+  end)
   t:start()
   return widget
 end

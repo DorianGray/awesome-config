@@ -1,14 +1,14 @@
 #!/bin/sh
 
-ACTION=`zenity --width=90 --height=200 --list --radiolist --text="Select logout action" --title="Logout" --column "Choice" --column "Action" TRUE Shutdown FALSE Reboot FALSE LockScreen FALSE Suspend`
+ACTION=`zenity --width=90 --height=100 --list --radiolist --text="" --title="Logout" --column "" --column "" --hide-header TRUE Shutdown FALSE "Reboot"`
 
 if [ -n "${ACTION}" ];then
   case $ACTION in
   Shutdown)
-    zenity --question --text "Are you sure you want to shutdown?" && gksudo poweroff
+    gksudo poweroff
     ;;
   Reboot)
-    zenity --question --text "Are you sure you want to reboot?" && gksudo reboot
+    gksudo reboot
     ;;
   esac
 fi

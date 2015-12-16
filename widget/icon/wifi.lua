@@ -27,12 +27,39 @@ local function icon_generate(width, height, signal)
   return surface
 end
 
+local function recolor(icon, color)
+  local surface = lgi.cairo.ImageSurface(lgi.cairo.Format.ARGB32, icon.width, icon.height)
+  local cr = lgi.cairo.Context(surface)
+  local pat = lgi.cairo.Pattern
+  cr:set_source(color)
+  cr:mask(pat.create_for_surface(icon), 0, 0)
+  return surface
+end
+
 return function(width, height)
-  return {
-    icon_generate(width, height, 0),
-    icon_generate(width, height, 25),
-    icon_generate(width, height, 50),
-    icon_generate(width, height, 75),
-    icon_generate(width, height, 100),
+  local icons = {
+    normal = {
+      icon_generate(width, height, 0),
+      icon_generate(width, height, 25),
+      icon_generate(width, height, 50),
+      icon_generate(width, height, 75),
+      icon_generate(width, height, 100),
+    },
+    nowan = {}
   }
+  for _, v in pairs(icons.normal) do
+    icons.nowan[#icons.nowan+1] = recolor(v, color(beautiful.fg_urgent))
+  end
+  icons.disconnected = icons.nowan[#icons.nowan]
+
+  function icons.from_signal(signal, nowan)
+    if type(signal) ~= 'number' then return nil end
+    local index = math.floor(signal / 25)+1
+    if nowan then
+      return icons.nowan[index]
+    end
+    return icons.normal[index]
+  end
+
+  return icons
 end
