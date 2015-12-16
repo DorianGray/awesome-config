@@ -101,36 +101,6 @@ local function battery_border_generate(args)
   return cr:copy_path()
 end
 
-local function battery_text_generate(text, font)
-  local surface = lgi.cairo.ImageSurface(lgi.cairo.Format.ARGB32, 100, 100)
-  local cr = lgi.cairo.Context(surface)
-  cr:new_path()
-  cr:select_font_face(font:get_family(), lgi.cairo.FontSlant.NORMAL, lgi.cairo.FontWeight.NORMAL)
-  cr:set_font_size(font:get_size() / lgi.Pango.SCALE)
-  cr:move_to(0, 0)
-  cr:text_path(text)
-  cr:close_path()
-  return cr:copy_path()
-end
-
-local function battery_text_draw(cr, args, text)
-  local font = lgi.Pango.FontDescription.from_string(args.font)
-  --font:set_size(10)
-
-  cr:select_font_face(font:get_family(), lgi.cairo.FontSlant.NORMAL, lgi.cairo.FontWeight.NORMAL)
-  cr:set_font_size(font:get_size() / lgi.Pango.SCALE)
-
-  local extents = cr:text_extents(text)
-  local text_x = (args.width / 2.0) - ((extents.width + (extents.x_bearing * 2)) / 2.0)
-  local text_y = (args.height / 2.0) - ((extents.height + (extents.y_bearing * 2)) / 2.0)
-
-  cr:translate(text_x, text_y)
-  cr:append_path(battery_text_generate(text, font))
-  cr:translate(-text_x, -text_y)
-
-  return true
-end
-
 local function battery_fill_generate(width, height, percent)
   -- Sanity check on the percentage
   local percent = percent
@@ -187,9 +157,6 @@ function assault.draw(assault, wibox, cr, width, height)
     cr:translate( bolt_x,  bolt_y)
     cr:append_path(battery_bolt_generate(data[assault].bolt_width, data[assault].bolt_height))
     cr:translate(-bolt_x, -bolt_y)
-  elseif acpi_battery_is_present(data[assault].battery) then
-    local percentstr = string.format('%d%%', round(percent * 100))
-    battery_text_draw(cr, data[assault], percentstr)
   end
   cr:set_source(draw_color)
   cr:fill()

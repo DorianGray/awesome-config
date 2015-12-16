@@ -6,8 +6,8 @@ local beautiful = require 'beautiful'
 local string = require 'string'
 local table = require 'table'
 local asyncshell = require 'lain.asyncshell'
-local icons = require 'widget.icon.wifi'(16,16)
-local lgi = require("lgi")
+local icons = require 'widget.icon.wifi'(32,32)
+local lgi = require 'lgi'
 
 local o = {connected=false, signal=0}
 
@@ -46,9 +46,18 @@ local function parse_command(input)
 end
 
 local function get_net_status(cb)
-  run('ping -c 1 8.8.8.8 | grep \'100% packet loss\'', function(output)
-    cb(output == "")
-  end)
+  local times = 0
+  local function ping()
+    run('ping -c 1 -W 1 8.8.8.8 | grep \'100% packet loss\'', function(output)
+      if output ~= "" and times <= 4 then
+        times = times + 1
+        ping()
+      else
+        cb(output == "")
+      end
+    end)
+  end
+  ping()
 end
 
 --Make a table of the local interfaces
@@ -105,7 +114,22 @@ local function toggle_wifi(cb)
   run('nmcli radio wifi', function(output)
     local action = trim(output) == 'enabled' and 'off' or 'on'
     run('nmcli radio wifi '..action, function(output)
-      cb(output)
+      local function scan()
+        run('sleep 1', function()
+          run('nmcli device wifi rescan', function(output)
+            if output == "" then
+              cb(output)
+            else
+              scan()
+            end
+          end)
+        end)
+      end
+      if action == "on" then
+        scan()
+      else
+        cb(output)
+      end
     end)
   end)
 end
@@ -241,6 +265,10 @@ local function generate_wifi_menu(iface, networks, cb)
       end)
     end}
     table.insert(wifi_list, ud)
+    local ud = {'Refresh', function()
+      generate_menu(cb)
+    end}
+    table.insert(wifi_list, ud)
     local face = {generate_iface_line(iface), wifi_list}
     table.insert(networks, face)
     o.connected = wificonnected
@@ -252,7 +280,7 @@ local function generate_wifi_menu(iface, networks, cb)
 end
 
 --generate the network menu
-local function generate_menu(cb)
+generate_menu = function(cb)
   get_local_interfaces(function(local_interfaces)
     local networks = {}
     --Sort by network type
@@ -295,6 +323,7 @@ local function menu(args, widget)
     else
       widget:set_image(icons.from_signal(o.signal))
     end
+    widget:emit_signal('widget::updated')
   end)
 end
 
@@ -308,7 +337,7 @@ function o.widget(promptbox)
 
   local widget = awful.widget.launcher(args)
   menu(args, widget)
-  local t = gears.timer({timeout = 300})
+  local t = gears.timer({timeout = 15})
   t:connect_signal("timeout", function() menu(args, widget) end)
   t:start()
   local t = gears.timer({timeout = 10})
@@ -316,7 +345,10 @@ function o.widget(promptbox)
     get_net_status(function(up)
       if not up then
         widget:set_image(icons.from_signal(o.signal, true))
+      else
+        widget:set_image(icons.from_signal(o.signal))
       end
+      widget:emit_signal('widget::updated')
     end)
   end)
   t:start()

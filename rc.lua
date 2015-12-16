@@ -50,7 +50,6 @@ local boxes = {
 local taglist = {}
 
 -- Textclock
-icons.clock = wibox.widget.imagebox(beautiful.widget_clock)
 widgets.clock = lain.widgets.abase({
   timeout  = 60,
   cmd      = 'date +\'%a %d %b %R\'',
