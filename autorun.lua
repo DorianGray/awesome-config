@@ -18,6 +18,7 @@ local autorunApps = {
   ['gnome-terminal'] = {cmd='-e "/home/awesome/.config/awesome/tmux-session.sh awesome"', match='gnome-terminal-'},
   ['gnome-settings-daemon'] = {match='gnome-settings-'},
   ['unclutter'] = {cmd='-root'},
+  ['udiskie'] = {},
 --  ['urxvtd'] = {},
 }
 if autorun then

@@ -17,20 +17,18 @@ if awesome.startup_errors then
   })
 end
 
-do
-  local in_error = false
-  awesome.connect_signal('debug::error', function (err)
-    if in_error then return end
-    in_error = true
+local in_error = false
+awesome.connect_signal('debug::error', function (err)
+  if in_error then return end
+  in_error = true
 
-    naughty.notify({
-      preset = naughty.config.presets.critical,
-      title = 'Oops, an error happened!',
-      text = err,
-    })
-    in_error = false
-  end)
-end
+  naughty.notify({
+    preset = naughty.config.presets.critical,
+    title = 'Oops, an error happened!',
+    text = debug.traceback(err),
+  })
+  in_error = false
+end)
 
 -- beautiful init
 beautiful.init(os.getenv('HOME') .. '/.config/awesome/themes/powerarrow-darker/theme.lua')
@@ -66,6 +64,7 @@ widgets.calendar = lain.widgets.calendar
 widgets.calendar:attach(widgets.clock, { font_size = 10 })
 
 -- MEM
+--[[
 icons.memory = wibox.widget.imagebox(beautiful.widget_mem)
 widgets.memory = lain.widgets.mem({
   settings = function()
@@ -80,24 +79,23 @@ widgets.cpu = lain.widgets.cpu({
     widget:set_text(' ' .. cpu_now.usage .. '% ')
   end
 })
+]]
 
 -- Battery
-icons.battery = wibox.widget.imagebox(beautiful.widget_battery)
-widgets.battery = lain.widgets.bat({
-  settings = function()
-    if bat_now.perc == 'N/A' then
-      widget:set_markup(' AC ')
-      icons.battery:set_image(beautiful.widget_ac)
-      return
-    elseif tonumber(bat_now.perc) <= 5 then
-      icons.battery:set_image(beautiful.widget_battery_empty)
-    elseif tonumber(bat_now.perc) <= 15 then
-      icons.battery:set_image(beautiful.widget_battery_low)
-    else
-      icons.battery:set_image(beautiful.widget_battery)
-    end
-    widget:set_markup(' ' .. bat_now.perc .. '% ')
-  end
+widgets.battery = require 'widget.battery'({
+  width = 15,
+  height = 5,
+  bolt_width = 15,
+  bolt_height = 9,
+  stroke_width = 2,
+  peg_top = 3,
+  peg_height = 3,
+  peg_width = 2,
+  font = beautiful.font,
+  critical_level = 0.10,
+  normal_color = beautiful.fg_normal,
+  critical_color = "#ff0000",
+  charging_color = beautiful.fg_normal,
 })
 
 -- Audio

@@ -6,6 +6,7 @@ local beautiful = require 'beautiful'
 local string = require 'string'
 local table = require 'table'
 local asyncshell = require 'lain.asyncshell'
+local icons = require 'widget.icon.wifi'(16,16)
 
 local o = {connected=false, signal=0, ssid=''}
 
@@ -176,20 +177,8 @@ local function generate_iface_line(lt, skip_replace)
 end
 
 local function icon_from_signal(signal)
-  if not signal then
-    return nil
-  end
-  if signal <= 20 then
-    return beautiful.widget_net_0
-  elseif signal <= 40 then
-    return beautiful.widget_net_1
-  elseif signal <= 60 then
-    return beautiful.widget_net_2
-  elseif signal <= 80 then
-    return beautiful.widget_net_3
-  else
-    return beautiful.widget_net
-  end
+  if not signal then return signal end
+  return icons[math.floor(signal / 25)+1]
 end
 
 local function unique_wifi(wifi)
@@ -209,62 +198,72 @@ local function unique_wifi(wifi)
   return res
 end
 
+local generate_menu
+
+local function generate_wifi_menu(iface, networks, cb)
+  get_area_wifi(function(area_wifi)
+    local wifi_list = {}
+    o.connected = false
+    o.signal = 0
+    o.ssid = ''
+    o.security = nil
+    area_wifi = unique_wifi(area_wifi)
+    table.sort(area_wifi, function(a,b) return (tonumber(a[3]) or 100) > (tonumber(b[3]) or 100) end)
+    for i, lt in ipairs(area_wifi) do
+      local ssid, signal, security = lt[2], tonumber(lt[3]), lt[1]
+      local work = {
+        generate_wifi_line(lt),
+        function()
+          connect_wifi(ssid, function()
+            generate_menu(cb)
+          end)
+        end,
+        icon_from_signal(signal)
+      }
+
+      if i > 1 then
+        if lt[4] == '*' then
+          o.connected = true
+          o.signal = signal
+          o.ssid = ssid
+          o.security = security
+        else
+          table.insert(wifi_list, work)
+        end
+      else
+        table.insert(wifi_list, {generate_wifi_line({'🔒 ', 'SSID', nil, nil}, true)})
+      end
+    end
+    local ud = {'Toggle Interface', function()
+      toggle_wifi(function()
+        generate_menu(cb)
+      end)
+    end}
+    table.insert(wifi_list, ud)
+    local face = {generate_iface_line(iface), wifi_list}
+    table.insert(networks, face)
+    cb(networks)
+  end)
+end
+
+--generate the network menu
 local function generate_menu(cb)
-  --generate the network menu
-  local networks = {}
-  local wifi_list = {}
   get_local_interfaces(function(local_interfaces)
+    local networks = {}
+    --Sort by network type
     table.sort(local_interfaces, function(a, b) return a[2] < b[2] end)
     local last_iface = nil
     for key, iface in ipairs(local_interfaces) do
+      -- Insert type separator(ie: BRIDGE)
       if key ~= 1 and last_iface ~= iface[2] then
         last_iface = iface[2]
         table.insert(networks, {last_iface:upper()})
       end
       if iface[2] == 'wifi' then
-        get_area_wifi(function(area_wifi)
-          o.connected = false
-          o.signal = 0
-          o.ssid = ''
-          o.security = nil
-          area_wifi = unique_wifi(area_wifi)
-          table.sort(area_wifi, function(a,b) return (tonumber(a[3]) or 100) > (tonumber(b[3]) or 100) end)
-          for i, lt in ipairs(area_wifi) do
-            local ssid, signal, security = lt[2], tonumber(lt[3]), lt[1]
-            local work = {
-              generate_wifi_line(lt),
-              function()
-                connect_wifi(ssid, function()
-                  generate_menu(cb)
-                end)
-              end,
-              icon_from_signal(signal)
-            }
-
-            if i > 1 then
-              if lt[4] == '*' then
-                o.connected = true
-                o.signal = signal
-                o.ssid = ssid
-                o.security = security
-              else
-                table.insert(wifi_list, work)
-              end
-            else
-              table.insert(wifi_list, {generate_wifi_line({'🔒 ', 'SSID', nil, nil}, true)})
-            end
-          end
-          local ud = {'Toggle Interface', function()
-            toggle_wifi(function()
-              generate_menu(cb)
-            end)
-          end}
-          table.insert(wifi_list, ud)
-          local face = {generate_iface_line(iface), wifi_list}
-          table.insert(networks, face)
-          cb(networks)
-        end)
+        -- wifi interfaces
+        generate_wifi_menu(iface, networks, cb)
       elseif key ~= 1 then
+        --any network interface that is not the header and does not have a submenu
         local face = {generate_iface_line(iface), function()
           toggle_interface(iface[1], function()
             generate_menu(cb)
