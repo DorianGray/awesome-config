@@ -20,7 +20,18 @@ return function(boxes, widgets)
   -- Non-empty tag browsing
   awful.key({ altkey }, 'Left', function () lain.util.tag_view_nonempty(-1) end),
   awful.key({ altkey }, 'Right', function () lain.util.tag_view_nonempty(1) end),
+  -- Alt Tab
+  awful.key({ altkey }, "Tab",
+  function ()
+    widgets.alttab.switch(1, "Alt_L", "Tab", "ISO_Left_Tab")
+  end	     
+  ),
 
+  awful.key({ altkey, "Shift"   }, "Tab",
+  function ()
+    widgets.alttab.switch(-1, "Alt_L", "Tab", "ISO_Left_Tab")
+  end
+  ),
   -- Default client focus
   awful.key({ altkey }, 'k',
   function ()

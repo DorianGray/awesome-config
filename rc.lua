@@ -80,6 +80,18 @@ widgets.cpu = lain.widgets.cpu({
 })
 ]]
 
+--Alt Tab
+widgets.alttab = require 'widget.alttab'
+widgets.alttab.settings.preview_box = true
+widgets.alttab.settings.preview_box_bg = "#ddddddaa"
+widgets.alttab.settings.preview_box_border = "#22222200"
+widgets.alttab.settings.preview_box_fps = 30
+widgets.alttab.settings.preview_box_delay = 150
+
+widgets.alttab.settings.client_opacity = false
+widgets.alttab.settings.client_opacity_value = 0.5
+widgets.alttab.settings.client_opacity_delay = 150
+
 -- Battery
 widgets.battery = require 'widget.battery'({
   width = 15,
