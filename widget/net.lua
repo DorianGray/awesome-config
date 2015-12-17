@@ -352,6 +352,12 @@ function o.widget(promptbox)
     end)
   end)
   t:start()
+  awful.tooltip({
+    objects={ widget },
+    timer_function = function()
+      return o.ssid
+    end
+  })
   return widget
 end
 

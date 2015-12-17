@@ -1,4 +1,5 @@
 local base = require 'wibox.widget.base'
+local awful = require 'awful'
 local color = require 'gears.color'
 local beautiful = require 'beautiful'
 local lgi = require 'lgi'
@@ -55,6 +56,13 @@ local function acpi_battery_percent(battery)
   local out_f = full:read()
   full:close()
   return tonumber(out_n)/tonumber(out_f)
+end
+
+local function acpi_battery_runtime(battery)
+  local output = awful.util.pread('acpi')
+  local _, _, state, percent, time = output:find('Battery %d+: (%a*), (%d*)%%,? ?(%S*)')
+  
+  return 'State: '..state..'\r\nCapacity: '..percent..'%'..(time ~= '' and '\r\nRemaining: '..time or '')
 end
 
 local function battery_bolt_generate(width, height)
@@ -226,7 +234,12 @@ function assault.new(args)
 
   widget.draw = assault.draw
   widget.fit = assault.fit
-
+  awful.tooltip({
+    objects={ widget },
+    timer_function = function()
+      return acpi_battery_runtime('BAT0')
+    end
+  })
   return widget
 end
 
