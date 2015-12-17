@@ -30,6 +30,9 @@ awesome.connect_signal('debug::error', function (err)
   in_error = false
 end)
 
+--initialize compositor
+awful.spawn.with_shell("compton -b -c --paint-on-overlay --backend glx --vsync opengl-swc")
+
 -- beautiful init
 beautiful.init(os.getenv('HOME') .. '/.config/awesome/themes/powerarrow-darker/theme.lua')
 
