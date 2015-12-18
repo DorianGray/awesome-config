@@ -1,5 +1,6 @@
 local awful = require 'awful'
 local beautiful = require 'beautiful'
+local naughty = require 'naughty'
 
 local tags = require 'tags'
 
@@ -13,16 +14,11 @@ awful.rules.rules = {
   keys = clientkeys,
   buttons = clientbuttons,
   size_hints_honor = false } },
-  { rule = { class = 'URxvt' },
-  properties = { opacity = 0.99 } },
-
-  { rule = { class = 'MPlayer' },
-  properties = { floating = true } },
 
   { rule = { instance = 'plugin-container' },
   properties = { tag = tags[1][1] } },
 
-  { rule = { class = 'Gnome-terminal' },
+  { rule = { class = 'urxvt' },
   properties = {
     tag = tags[1][1],
     y = 16,

@@ -9,7 +9,7 @@ local asyncshell = require 'lain.asyncshell'
 local icons = require 'widget.icon.wifi'(32,32)
 local lgi = require 'lgi'
 
-local o = {connected=false, signal=0}
+local o = {connected = false, signal = 0, internet = true}
 
 local function run(command, callback)
   return asyncshell.request(command, callback)
@@ -74,7 +74,7 @@ local function get_area_wifi(cb)
   end)
 end
 
-local function connect_wifi(ssid, cb)
+local function connect_wifi(ssid, security, cb)
   run('nmcli --fields NAME connection', function(output)
     local ot = parse_command(output)
     local found = false
@@ -87,12 +87,18 @@ local function connect_wifi(ssid, cb)
     if found then
       run('nmcli connection up '..ssid, function(output) end)
     else
-      awful.prompt.run({ prompt = "Password for "..ssid..": " },
-      o.promptbox[mouse.screen].widget, function(password)
-        run('nmcli device wifi connect '..ssid..' password '..password, function(output)
+      if security == "--" then
+        run('nmcli device wifi connect '..ssid, function(output)
           cb(output)
         end)
-      end)
+      else
+        awful.prompt.run({ prompt = "Password for "..ssid..": " },
+        o.promptbox[mouse.screen].widget, function(password)
+          run('nmcli device wifi connect '..ssid..' password '..password, function(output)
+            cb(output)
+          end)
+        end)
+      end
     end
   end)
 end
@@ -247,7 +253,7 @@ local function generate_wifi_menu(iface, networks, cb)
           local work = {
             generate_wifi_line(lt),
             function()
-              connect_wifi(ssid, function()
+              connect_wifi(ssid, security, function()
                 generate_menu(cb)
               end)
             end,
@@ -321,7 +327,7 @@ local function menu(args, widget)
     if not o.connected then
       widget:set_image(icons.disconnected)
     else
-      widget:set_image(icons.from_signal(o.signal))
+      widget:set_image(icons.from_signal(o.signal, not o.internet))
     end
     widget:emit_signal('widget::updated')
   end)
@@ -343,6 +349,7 @@ function o.widget(promptbox)
   local t = gears.timer({timeout = 10})
   t:connect_signal("timeout", function()
     get_net_status(function(up)
+      o.internet = up
       if not up then
         widget:set_image(icons.from_signal(o.signal, true))
       else
