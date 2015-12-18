@@ -6,7 +6,7 @@ local beautiful = require 'beautiful'
 local string = require 'string'
 local table = require 'table'
 local asyncshell = require 'lain.asyncshell'
-local icons = require 'widget.icon.wifi'(32,32)
+local icons = require 'widget.net.icon.wifi'(32,32)
 local lgi = require 'lgi'
 
 local o = {connected = false, signal = 0, internet = true}
