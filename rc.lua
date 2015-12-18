@@ -24,7 +24,7 @@ awesome.connect_signal('debug::error', function (err)
 
   naughty.notify({
     preset = naughty.config.presets.critical,
-    title = 'Oops, an error happened!',
+    title = 'Oops, an error occurred!',
     text = debug.traceback(err),
   })
   in_error = false
@@ -113,9 +113,7 @@ widgets.battery = require 'widget.battery'({
 })
 
 -- Audio
-local volwidget = require 'widget.volume'
-icons.volume = volwidget.icon 
-widgets.volume = volwidget.widget
+widgets.volume = require 'widget.volume'
 
 -- Net
 widgets.network = require 'widget.net'.widget(boxes.prompt)

@@ -9,8 +9,6 @@ return function(widgets, icons, boxes, taglist)
   local separators = lain.util.separators
   -- Separators
   local spr = wibox.widget.textbox(' ')
-  local arrl = wibox.widget.imagebox()
-  arrl:set_image(beautiful.arrl)
   local arrl_dl = separators.arrow_left(beautiful.bg_focus, 'alpha')
   local arrl_ld = separators.arrow_left('alpha', beautiful.bg_focus)
 
@@ -111,8 +109,7 @@ return function(widgets, icons, boxes, taglist)
 
     if s == 1 then right_layout:add(wibox.widget.systray()) end
     right_layout:add(spr)
-    right_layout:add(arrl)
-    right_layout_add(icons.volume, widgets.volume)
+    right_layout_add(widgets.volume)
     --right_layout_add(icons.memory, widgets.memory, icons.cpu, widgets.cpu)
     right_layout_add(widgets.network)
     right_layout_add(widgets.battery)
