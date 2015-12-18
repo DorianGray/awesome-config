@@ -179,7 +179,7 @@ local function generate_wifi_line(lt, skip_replace)
   return generate_line(lengths, fields, lt, skip_replace)
 end
 
-local function generate_iface_line(lt, skip_replace)
+local function generate_iface_line(lt, skip_replace, last)
   lt = {lt[3], lt[1], lt[4]}
   if lt[2] == lt[3] then
     lt[3] = ''
@@ -191,16 +191,15 @@ local function generate_iface_line(lt, skip_replace)
   }
   local fields = {
     function(v)
-      local val = ' '
       if v:match('connected') then
-        val = '✓'
+        return '✓'
       elseif v:match('disconnected') or v:match('unavailable') then
-        val = 'x'
+        return 'x'
       end
-      return ' '..val
+      return '  '
     end,
     function(v, list)
-      return " ├╴"..v
+      return ' └╴'..v
     end,
     function(v)
       if v:match('%-%-') then
