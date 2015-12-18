@@ -3,14 +3,13 @@ local mouse = mouse
 local screen = screen
 local wibox = require('wibox')
 local table = table
-local timer = timer
 local keygrabber = keygrabber
 local math = require('math')
 local awful = require('awful')
 local gears = require("gears")
 local client = client
 awful.client = require('awful.client')
-
+local timer = gears.timer
 local naughty = require("naughty")
 local string = string
 local tostring = tostring

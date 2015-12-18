@@ -15,11 +15,18 @@ end
 local autorun = true
 local autorunApps = { 
   ['google-chrome'] = {cmd=false, match='chrome'},
-  ['gnome-terminal'] = {cmd='-e "/home/awesome/.config/awesome/tmux-session.sh awesome"', match='gnome-terminal-'},
+  ['urxvtcd'] = {cmd=table.concat({
+    '-loginShell',
+    '-bc',
+    '-title Terminal',
+    '-depth 32',
+    '-sl 32767',
+    '-fn "xft:Inconsolata\\ for\\ Powerline:pixelsize=16:Bold"',
+    '-e '..os.getenv('HOME')..'/.config/awesome/tmux-session.sh awesome',
+  }, ' '), match='tmux'},
   ['gnome-settings-daemon'] = {match='gnome-settings-'},
   ['unclutter'] = {cmd='-root'},
   ['udiskie'] = {},
---  ['urxvtd'] = {},
 }
 if autorun then
   for app, config in pairs(autorunApps) do
