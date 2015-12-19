@@ -7,7 +7,7 @@ local tags = require 'tags'
 -- Rules
 awful.rules.rules = {
   -- All clients will match this rule.
-  { rule = { },
+  {rule = { },
   properties = { border_width = beautiful.border_width,
   border_color = beautiful.border_normal,
   focus = awful.client.focus.filter,
@@ -15,37 +15,28 @@ awful.rules.rules = {
   buttons = clientbuttons,
   size_hints_honor = false } },
 
-  { rule = { instance = 'plugin-container' },
-  properties = { tag = tags[1][1] } },
-
-  { rule = { class = 'urxvt' },
+  {rule = { class = 'urxvt' },
   properties = {
     tag = tags[1][1],
     y = 16,
     x = 0,
     width = screen[1].workarea.width,
     height = screen[1].workarea.height,
-  }
-},
+  }},
 
-{
-  rule = { class = 'google-chrome' },
+  {rule = { class = 'google-chrome' },
   callback = function(c)
+    local s, t = 1, 2
     if screen.count() >= 2 then
-      c:tags({tags[2][1]})
-    else
-      c:tags({tags[1][2]})
+      s, t = 2, 1
     end
+    c:tags({tags[s][t]})
+
     c:geometry({
       y = 16,
       x = 0,
-      width = screen[1].workarea.width,
-      height = screen[1].workarea.height,
+      width = screen[s].workarea.width,
+      height = screen[s].workarea.height,
     })
-  end,
-},
-
-{ rule = { class = 'Gimp', role = 'gimp-image-window' },
-properties = { maximized_horizontal = true,
-maximized_vertical = true } },
+  end,},
 }

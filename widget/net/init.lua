@@ -195,6 +195,8 @@ local function generate_iface_line(lt, skip_replace, last)
         return '✓'
       elseif v:match('disconnected') or v:match('unavailable') then
         return 'x'
+      elseif v:match('connecting') then
+        return '!'
       end
       return '  '
     end,
