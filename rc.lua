@@ -34,7 +34,7 @@ end)
 awful.spawn.with_shell("compton -b -c --paint-on-overlay --backend glx --vsync opengl-swc")
 
 -- beautiful init
-beautiful.init(os.getenv('HOME') .. '/.config/awesome/themes/powerarrow-darker/theme.lua')
+beautiful.init(os.getenv('HOME') .. '/.config/awesome/theme/init.lua')
 
 -- Wallpaper
 if beautiful.wallpaper then

@@ -1,14 +1,6 @@
-
---[[
-                                             
-     Powerarrow Darker Awesome WM config 2.0 
-     github.com/copycat-killer               
-                                             
---]]
-
 theme                               = {}
 
-themes_dir                          = os.getenv("HOME") .. "/.config/awesome/themes/powerarrow-darker"
+themes_dir                          = os.getenv("HOME") .. "/.config/awesome/theme"
 theme.wallpaper                     = themes_dir .. "/wall.png"
 
 theme.font                          = "Inconsolata-dz for Powerline Bold 8"
@@ -22,7 +14,7 @@ theme.border_width                  = "0"
 theme.border_normal                 = "#3F3F3F"
 theme.border_focus                  = "#7F7F7F"
 theme.border_marked                 = theme.fg_urgent
-theme.titlebar_bg_focus             = "#FFFFFF"
+theme.titlebar_bg_focus             = theme.bg_focus
 theme.titlebar_bg_normal            = theme.titlebar_bg_focus
 theme.taglist_fg_focus              = theme.fg_focus
 theme.tasklist_bg_focus             = "#1A1A1A"
