@@ -6,7 +6,7 @@ local beautiful = require 'beautiful'
 local string = require 'string'
 local table = require 'table'
 local asyncshell = require 'lain.asyncshell'
-local icons = require 'widget.net.icon.wifi'(32,32)
+local icon = require 'widget.net.icon.signal'(32,32)
 local lgi = require 'lgi'
 
 local o = {connected = false, signal = 0, internet = true}
@@ -74,6 +74,15 @@ local function get_area_wifi(cb)
   end)
 end
 
+local function escape(str)
+  naughty.notify({
+    preset = naughty.config.presets.critical,
+    title = 'SSID',
+    text = str..'|'..str:gsub('%(', '\\('):gsub('%)', '\\)'),
+  })
+  return str:gsub('%(', '\\('):gsub('%)', '\\)')
+end
+
 local function connect_wifi(ssid, security, cb)
   run('nmcli --fields NAME connection', function(output)
     local ot = parse_command(output)
@@ -85,16 +94,16 @@ local function connect_wifi(ssid, security, cb)
       end
     end
     if found then
-      run('nmcli connection up '..ssid, function(output) end)
+      run('nmcli connection up '..escape(ssid), function(output) end)
     else
       if security == "--" then
-        run('nmcli device wifi connect '..ssid, function(output)
+        run('nmcli device wifi connect '..escape(ssid), function(output)
           cb(output)
         end)
       else
         awful.prompt.run({ prompt = "Password for "..ssid..": " },
         o.promptbox[mouse.screen].widget, function(password)
-          run('nmcli device wifi connect '..ssid..' password '..password, function(output)
+          run('nmcli device wifi connect '..escape(ssid)..' password '..escape(password), function(output)
             cb(output)
           end)
         end)
@@ -258,7 +267,7 @@ local function generate_wifi_menu(iface, networks, cb)
                 generate_menu(cb)
               end)
             end,
-            icons.from_signal(signal)
+            icon(signal, true, true)
           }
           table.insert(wifi_list, work)
         end
@@ -325,11 +334,7 @@ local function menu(args, widget)
       },
       items = items
     })
-    if not o.connected then
-      widget:set_image(icons.disconnected)
-    else
-      widget:set_image(icons.from_signal(o.signal, not o.internet))
-    end
+    widget:set_image(icon(o.signal, o.connected, o.internet))
     widget:emit_signal('widget::updated')
   end)
 end
@@ -338,24 +343,19 @@ function o.widget(promptbox)
   o.promptbox = promptbox
 
   local args = {
-    image = icons.from_signal(0, true),
+    image = icon(o.signal, o.connected, o.internet),
     menu = awful.menu(),
   }
 
   local widget = awful.widget.launcher(args)
   menu(args, widget)
-  local t = gears.timer({timeout = 15})
+  local t = gears.timer({timeout = 60})
   t:connect_signal("timeout", function() menu(args, widget) end)
   t:start()
-  local t = gears.timer({timeout = 10})
+  local t = gears.timer({timeout = 30})
   t:connect_signal("timeout", function()
     get_net_status(function(up)
-      o.internet = up
-      if not up then
-        widget:set_image(icons.from_signal(o.signal, true))
-      else
-        widget:set_image(icons.from_signal(o.signal))
-      end
+      widget:set_image(icon(o.signal))
       widget:emit_signal('widget::updated')
     end)
   end)

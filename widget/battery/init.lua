@@ -5,15 +5,15 @@ local beautiful = require 'beautiful'
 local lgi = require 'lgi'
 local gears = require 'gears'
 
-local assault = { mt = {} }
+local o = { mt = {} }
 
 local data = setmetatable({}, { __mode = 'k' })
 
 local properties = { 'width', 'height' }
 
-function assault.fit(assault, width, height)
-  local width = 2 + data[assault].width + (data[assault].stroke_width * 2) + data[assault].peg_width
-  local height = 2 + data[assault].height + (data[assault].stroke_width * 2)
+function o.fit(o, width, height)
+  local width = 2 + data[o].width + (data[o].stroke_width * 2) + data[o].peg_width
+  local height = 2 + data[o].height + (data[o].stroke_width * 2)
   return width, height
 end
 
@@ -130,40 +130,40 @@ local properties = {
   'normal_color', 'charging_color', 'critical_color'
 }
 
-function assault.draw(assault, wibox, cr, width, height)
-  local center_x = (width / 2.0) - ((data[assault].width + (data[assault].stroke_width * 2)) / 2.0)
-  local center_y = (height / 2.0) - ((data[assault].height + (data[assault].stroke_width * 2)) / 2.0)
+function o.draw(o, wibox, cr, width, height)
+  local center_x = (width / 2.0) - ((data[o].width + (data[o].stroke_width * 2)) / 2.0)
+  local center_y = (height / 2.0) - ((data[o].height + (data[o].stroke_width * 2)) / 2.0)
   cr:translate(center_x, center_y)
   cr:append_path(battery_border_generate({
-    width = data[assault].width,
-    height = data[assault].height,
-    stroke_width = data[assault].stroke_width,
-    peg_top = data[assault].peg_top,
-    peg_height = data[assault].peg_height,
-    peg_width = data[assault].peg_width
+    width = data[o].width,
+    height = data[o].height,
+    stroke_width = data[o].stroke_width,
+    peg_top = data[o].peg_top,
+    peg_height = data[o].peg_height,
+    peg_width = data[o].peg_width
   }))
 
   cr.fill_rule = 'EVEN_ODD'
-  local percent = acpi_battery_percent(data[assault].battery)
+  local percent = acpi_battery_percent(data[o].battery)
 
-  local draw_color = color(data[assault].normal_color)
-  if acpi_battery_is_present(data[assault].battery) then
-    if acpi_battery_is_charging(data[assault].battery) then
-      draw_color = color(data[assault].charging_color)
-    elseif percent <= data[assault].critical_level then
-      draw_color = color(data[assault].critical_color)
+  local draw_color = color(data[o].normal_color)
+  if acpi_battery_is_present(data[o].battery) then
+    if acpi_battery_is_charging(data[o].battery) then
+      draw_color = color(data[o].charging_color)
+    elseif percent <= data[o].critical_level then
+      draw_color = color(data[o].critical_color)
     end
   end
 
   -- Draw fill
-  cr:translate(data[assault].stroke_width, data[assault].stroke_width)
-  cr:append_path(battery_fill_generate(data[assault].width, data[assault].height, percent))
+  cr:translate(data[o].stroke_width, data[o].stroke_width)
+  cr:append_path(battery_fill_generate(data[o].width, data[o].height, percent))
 
-  if acpi_is_on_ac_power(data[assault].adapter) then
-    local bolt_x = (data[assault].width  / 2.0) - (data[assault].bolt_width  / 2.0)
-    local bolt_y = (data[assault].height / 2.0) - (data[assault].bolt_height / 2.0)
+  if acpi_is_on_ac_power(data[o].adapter) then
+    local bolt_x = (data[o].width  / 2.0) - (data[o].bolt_width  / 2.0)
+    local bolt_y = (data[o].height / 2.0) - (data[o].bolt_height / 2.0)
     cr:translate( bolt_x,  bolt_y)
-    cr:append_path(battery_bolt_generate(data[assault].bolt_width, data[assault].bolt_height))
+    cr:append_path(battery_bolt_generate(data[o].bolt_width, data[o].bolt_height))
     cr:translate(-bolt_x, -bolt_y)
   end
   cr:set_source(draw_color)
@@ -172,8 +172,8 @@ end
 
 -- Build properties function
 for _, prop in ipairs(properties) do
-  if not assault['set_' .. prop] then
-    assault['set_' .. prop] = function(widget, value)
+  if not o['set_' .. prop] then
+    o['set_' .. prop] = function(widget, value)
       data[widget][prop] = value
       widget:emit_signal('widget::updated')
       return widget
@@ -181,8 +181,8 @@ for _, prop in ipairs(properties) do
   end
 end
 
---- Create an assault widget
-function assault.new(args)
+--- Create an o widget
+function o.new(args)
   local args = args or {}
   local battery = args.battery or 'BAT0'
   local adapter = args.adapter or 'AC'
@@ -229,11 +229,11 @@ function assault.new(args)
 
   -- Set methods
   for _, prop in ipairs(properties) do
-    widget['set_' .. prop] = assault['set_' .. prop]
+    widget['set_' .. prop] = o['set_' .. prop]
   end
 
-  widget.draw = assault.draw
-  widget.fit = assault.fit
+  widget.draw = o.draw
+  widget.fit = o.fit
   awful.tooltip({
     objects={ widget },
     timer_function = function()
@@ -243,8 +243,8 @@ function assault.new(args)
   return widget
 end
 
-function assault.mt:__call(...)
-  return assault.new(...)
+function o.mt:__call(...)
+  return o.new(...)
 end
 
-return setmetatable(assault, assault.mt)
+return setmetatable(o, o.mt)
