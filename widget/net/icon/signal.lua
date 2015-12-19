@@ -13,13 +13,13 @@ local function recolor(icon, color)
   return surface
 end
 
-local function draw_signal(surface, signal, connected)
+local function draw_signal(surface, signal, connected, color)
   if not connected then
     signal = 100
   end
   local cr = lgi.cairo.Context(surface)
   cr:set_fill_rule(lgi.cairo.FillRule.EVEN_ODD)
-  cr:set_source(color(beautiful.fg_normal))
+  cr:set_source(color)
   local centerx = surface.width / 2
   cr:set_line_width(2)
   local percent = signal / 100
@@ -56,8 +56,8 @@ local function icon_generate(width, height, signal, connected, internet)
   if signal < 0 then signal = 0 end
 
   local surface = lgi.cairo.ImageSurface(lgi.cairo.Format.ARGB32, width, height)
-  --draw_signal(surface, 100, false)
-  draw_signal(surface, signal, connected)
+  draw_signal(surface, 100, true, color('#44444499'))
+  draw_signal(surface, signal, connected, color(beautiful.fg_normal), 1)
   if not connected or not internet then
     surface = recolor(surface, color(beautiful.fg_urgent))
   end
