@@ -21,7 +21,6 @@ local function draw_signal(surface, signal, connected, color)
   cr:set_fill_rule(lgi.cairo.FillRule.EVEN_ODD)
   cr:set_source(color)
   local centerx = surface.width / 2
-  cr:set_line_width(2)
   local percent = signal / 100
   local arc_height = (surface.height * 0.3) * percent
   local height = (surface.height) - arc_height
