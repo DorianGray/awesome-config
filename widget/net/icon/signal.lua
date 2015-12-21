@@ -24,7 +24,7 @@ local function draw_signal(surface, signal, connected, color)
   cr:set_line_width(2)
   local percent = signal / 100
   local arc_height = (surface.height * 0.3) * percent
-  local height = (surface.height * 0.9) - arc_height
+  local height = (surface.height) - arc_height
   local arc_y = surface.height - (height * percent)
   local arc_start = {
     x = centerx - (surface.width / 2) * percent,

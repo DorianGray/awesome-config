@@ -108,7 +108,7 @@ return function(boxes, widgets)
   awful.key({ }, "XF86AudioLowerVolume",  widgets.volume.Down),
   awful.key({ }, "XF86AudioMute",         widgets.volume.ToggleMute),
 
-  awful.key({ }, "XF86PowerOff",          function() awful.spawn(DIR.."/syscontrol.sh") end),
+  awful.key({ }, "XF86PowerOff", function() widgets.power.menu:toggle({coords={x=1845,y=0}}) end),
   -- Lock screen
   awful.key({'Control', altkey}, 'l' , function ()
     local command = 'gnome-screensaver-command -l'

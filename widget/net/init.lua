@@ -75,11 +75,6 @@ local function get_area_wifi(cb)
 end
 
 local function escape(str)
-  naughty.notify({
-    preset = naughty.config.presets.critical,
-    title = 'SSID',
-    text = str..'|'..str:gsub('%(', '\\('):gsub('%)', '\\)'),
-  })
   return str:gsub('%(', '\\('):gsub('%)', '\\)')
 end
 

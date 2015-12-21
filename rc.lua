@@ -118,6 +118,12 @@ widgets.volume = require 'widget.volume'
 -- Net
 widgets.network = require 'widget.net'.widget(boxes.prompt)
 
+-- Power
+widgets.power = require 'widget.power'
+
+-- Display
+widgets.display = require 'widget.display'
+
 require 'layout'(widgets, icons, boxes, taglist)
 require 'keybindings'(boxes, widgets)
 require 'rules'

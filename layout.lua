@@ -108,12 +108,12 @@ return function(widgets, icons, boxes, taglist)
     end
 
     if s == 1 then right_layout:add(wibox.widget.systray()) end
-    right_layout:add(spr)
+    right_layout_add(widgets.display)
     right_layout_add(widgets.volume)
-    --right_layout_add(icons.memory, widgets.memory, icons.cpu, widgets.cpu)
     right_layout_add(widgets.network)
     right_layout_add(widgets.battery)
     right_layout_add(widgets.clock, spr)
+    right_layout_add(widgets.power, spr)
 
     -- Now bring it all together (with the tasklist in the middle)
     local layout = wibox.layout.align.horizontal()
