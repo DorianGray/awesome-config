@@ -90,7 +90,7 @@ widgets.battery = require 'widget.battery'({
   font = beautiful.font,
   critical_level = 0.10,
   normal_color = beautiful.fg_normal,
-  critical_color = "#ff0000",
+  critical_color = beautiful.fg_urgent,
   charging_color = beautiful.fg_normal,
 })
 
