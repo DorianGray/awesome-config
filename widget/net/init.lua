@@ -184,7 +184,7 @@ local function generate_wifi_line(lt, skip_replace)
 end
 
 local function generate_iface_line(lt, skip_replace, last)
-  lt = {lt[3], lt[1], lt[4]}
+  lt = {lt[3], lt[1], lt[4], lt[5]}
   if lt[2] == lt[3] then
     lt[3] = ''
   end
@@ -198,14 +198,18 @@ local function generate_iface_line(lt, skip_replace, last)
       if v:match('connected') then
         return '✓'
       elseif v:match('disconnected') or v:match('unavailable') then
-        return 'x'
+        return '✗'
       elseif v:match('connecting') then
-        return '!'
+        return ' ❗  '
       end
-      return '  '
+      return '     '
     end,
     function(v, list)
-      return ' └╴'..v
+      if lt[4] == 'last' then
+        return '╰╴'..v
+      else
+        return '├╴'..v
+      end
     end,
     function(v)
       if v:match('%-%-') then
@@ -270,6 +274,7 @@ local function generate_wifi_menu(iface, networks, cb)
         table.insert(wifi_list, {generate_wifi_line({'🔒 ', 'SSID', nil, nil}, true)})
       end
     end
+
     local ud = {'Toggle Interface', function()
       toggle_wifi(function()
         generate_menu(cb)
@@ -297,12 +302,20 @@ generate_menu = function(cb)
     --Sort by network type
     table.sort(local_interfaces, function(a, b) return a[2] < b[2] end)
     local last_iface = nil
-    for key, iface in ipairs(local_interfaces) do
+    for key in ipairs(local_interfaces) do
+      local iface = local_interfaces[key]
       -- Insert type separator(ie: BRIDGE)
       if key ~= 1 and last_iface ~= iface[2] then
+        iface[5] = 'new'
         last_iface = iface[2]
         table.insert(networks, {last_iface:upper()})
+      else
+        iface[5] = 'current'
       end
+      if key >= #local_interfaces or local_interfaces[key+1][2] ~= last_iface then
+        iface[5] = 'last'
+      end
+
       if iface[2] == 'wifi' then
         -- wifi interfaces
         generate_wifi_menu(iface, networks, cb)
@@ -324,7 +337,7 @@ local function menu(args, widget)
   generate_menu(function(items)
     args.menu = awful.menu({
       theme = {
-        height = 16,
+        height = 12,
         width = 150,
       },
       items = items

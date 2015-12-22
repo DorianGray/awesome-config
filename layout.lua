@@ -77,7 +77,7 @@ return function(widgets, icons, boxes, taglist)
     tasklists[s] = awful.widget.tasklist(s, awful.widget.tasklist.filter.currenttags, tasklists.buttons)
 
     -- Create the wibox
-    boxes.wi[s] = awful.wibox({ position = 'top', screen = s, height = 18 })
+    boxes.wi[s] = awful.wibox({ position = 'top', screen = s, height = 16 })
 
     -- Widgets that are aligned to the upper left
     local left_layout = wibox.layout.fixed.horizontal()
@@ -108,12 +108,11 @@ return function(widgets, icons, boxes, taglist)
     end
 
     if s == 1 then right_layout:add(wibox.widget.systray()) end
-    right_layout_add(widgets.display)
     right_layout_add(widgets.volume)
     right_layout_add(widgets.network)
     right_layout_add(widgets.battery)
-    right_layout_add(widgets.clock, spr)
-    right_layout_add(widgets.power, spr)
+    right_layout_add(widgets.clock)
+    right_layout_add(widgets.power)
 
     -- Now bring it all together (with the tasklist in the middle)
     local layout = wibox.layout.align.horizontal()

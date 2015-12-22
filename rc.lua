@@ -55,7 +55,7 @@ local taglist = {}
 -- Textclock
 widgets.clock = lain.widgets.abase({
   timeout  = 60,
-  cmd      = 'date +\'%a %d %b %R\'',
+  cmd      = 'date +\'%R\'',
   settings = function()
     widget:set_text(' ' .. output)
   end
@@ -64,24 +64,6 @@ widgets.clock = lain.widgets.abase({
 -- calendar
 widgets.calendar = lain.widgets.calendar
 widgets.calendar:attach(widgets.clock, { font_size = 10 })
-
--- MEM
---[[
-icons.memory = wibox.widget.imagebox(beautiful.widget_mem)
-widgets.memory = lain.widgets.mem({
-  settings = function()
-    widget:set_text(' ' .. mem_now.used .. 'MB ')
-  end
-})
-
--- CPU
-icons.cpu = wibox.widget.imagebox(beautiful.widget_cpu)
-widgets.cpu = lain.widgets.cpu({
-  settings = function()
-    widget:set_text(' ' .. cpu_now.usage .. '% ')
-  end
-})
-]]
 
 --Alt Tab
 widgets.alttab = require 'widget.alttab'
