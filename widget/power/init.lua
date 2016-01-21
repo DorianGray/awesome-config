@@ -5,8 +5,8 @@ local args = {
   menu = awful.menu({
     items = {
       {'Lock', 'gnome-screensaver-command -l'},
-      {'Shutdown', 'gksudo poweroff'},
-      {'Restart', 'gksudo reboot'},
+      {'Shutdown', 'poweroff'},
+      {'Restart', 'reboot'},
     },
     theme = {
       width = 75,

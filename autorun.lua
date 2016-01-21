@@ -12,9 +12,8 @@ local function run_once(cmd, match)
   awful.spawn.with_shell('pgrep -u $USER -x ' .. match .. ' > /dev/null || (' .. cmd .. ')')
 end
 
-local autorun = true
 local autorunApps = { 
-  ['google-chrome'] = {cmd=false, match='chrome'},
+  ['google-chrome'] = {cmd='--process-per-site', match='chrome'},
   ['urxvtcd'] = {cmd=table.concat({
     '-loginShell',
     '-bc',
@@ -24,12 +23,10 @@ local autorunApps = {
     '-fn "xft:Inconsolata\\ for\\ Powerline:pixelsize=16:Bold"',
     '-e '..os.getenv('HOME')..'/.config/awesome/tmux-session.sh awesome',
   }, ' '), match='tmux'},
-  ['gnome-settings-daemon'] = {match='gnome-settings-'},
+  ['pulseaudio'] = {cmd='-D'},
   ['unclutter'] = {cmd='-root'},
   ['udiskie'] = {},
 }
-if autorun then
-  for app, config in pairs(autorunApps) do
-    run_once(app..(config.cmd and ' '..config.cmd or ''), config.match)
-  end
+for app, config in pairs(autorunApps) do
+  run_once(app..(config.cmd and ' '..config.cmd or ''), config.match)
 end
