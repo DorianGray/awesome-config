@@ -31,7 +31,7 @@ awesome.connect_signal('debug::error', function (err)
 end)
 
 --initialize compositor
-awful.spawn.with_shell("compton -b -c --paint-on-overlay --backend glx --vsync opengl-swc")
+--awful.spawn.with_shell("compton -b -c --paint-on-overlay --backend glx --vsync opengl-swc")
 
 -- beautiful init
 beautiful.init(os.getenv('HOME') .. '/.config/awesome/theme/init.lua')
@@ -79,14 +79,14 @@ widgets.alttab.settings.client_opacity_delay = 150
 
 -- Battery
 widgets.battery = require 'widget.battery'({
-  width = 15,
-  height = 5,
-  bolt_width = 15,
-  bolt_height = 9,
+  width = 30,
+  height = 10,
+  bolt_width = 30,
+  bolt_height = 15,
   stroke_width = 2,
-  peg_top = 3,
-  peg_height = 3,
-  peg_width = 2,
+  peg_top = 4,
+  peg_height = 6,
+  peg_width = 4,
   font = beautiful.font,
   critical_level = 0.10,
   normal_color = beautiful.fg_normal,

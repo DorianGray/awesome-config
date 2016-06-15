@@ -13,14 +13,14 @@ local function run_once(cmd, match)
 end
 
 local autorunApps = { 
-  ['google-chrome'] = {cmd='--process-per-site', match='chrome'},
+  ['google-chrome'] = {cmd='--process-per-site --high-dpi-support=1 --force-device-scale-factor=1.5 --touch-events=enabled', match='chrome'},
   ['urxvtcd'] = {cmd=table.concat({
     '-loginShell',
     '-bc',
     '-title Terminal',
     '-depth 32',
     '-sl 32767',
-    '-fn "xft:Inconsolata\\ for\\ Powerline:pixelsize=16:Bold"',
+    '-fn "xft:Inconsolata\\ for\\ Powerline:pixelsize=28:Bold"',
     '-e '..os.getenv('HOME')..'/.config/awesome/tmux-session.sh awesome',
   }, ' '), match='tmux'},
   ['pulseaudio'] = {cmd='-D'},

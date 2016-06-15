@@ -77,7 +77,7 @@ return function(widgets, icons, boxes, taglist)
     tasklists[s] = awful.widget.tasklist(s, awful.widget.tasklist.filter.currenttags, tasklists.buttons)
 
     -- Create the wibox
-    boxes.wi[s] = awful.wibox({ position = 'top', screen = s, height = 16 })
+    boxes.wi[s] = awful.wibox({ position = 'top', screen = s, height = 32 })
 
     -- Widgets that are aligned to the upper left
     local left_layout = wibox.layout.fixed.horizontal()

@@ -337,8 +337,8 @@ local function menu(args, widget)
   generate_menu(function(items)
     args.menu = awful.menu({
       theme = {
-        height = 12,
-        width = 150,
+        height = beautiful.menu_height,
+        width = beautiful.menu_width,
       },
       items = items
     })

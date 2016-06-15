@@ -1,5 +1,6 @@
 local awful = require 'awful'
 local icon = require 'widget.power.icon.power'(32, 32)
+local beautiful = require 'beautiful'
 local args = {
   image = icon(),
   menu = awful.menu({
@@ -9,8 +10,8 @@ local args = {
       {'Restart', 'reboot'},
     },
     theme = {
-      width = 75,
-      height = 16,
+      width = beautiful.menu_width,
+      height = beautiful.menu_height,
     },
   }),
 }

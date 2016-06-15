@@ -3,7 +3,7 @@ theme                               = {}
 themes_dir                          = os.getenv("HOME") .. "/.config/awesome/theme"
 theme.wallpaper                     = themes_dir .. "/wall.jpg"
 
-theme.font                          = "Inconsolata-dz for Powerline Bold 8"
+theme.font                          = "Inconsolata-dz for Powerline Bold 14"
 theme.fg_normal                     = "#DDDDFF"
 theme.fg_focus                      = "#FFFFFF"
 theme.fg_urgent                     = "#CC9393"
@@ -23,11 +23,11 @@ theme.textbox_widget_margin_top     = 1
 theme.notify_fg                     = theme.fg_normal
 theme.notify_bg                     = theme.bg_normal
 theme.notify_border                 = theme.border_focus
-theme.awful_widget_height           = 14
+theme.awful_widget_height           = 28
 theme.awful_widget_margin_top       = 2
 theme.mouse_finder_color            = "#CC9393"
-theme.menu_height                   = "16"
-theme.menu_width                    = "140"
+theme.menu_height                   = 32
+theme.menu_width                    = 280
 
 theme.submenu_icon                  = themes_dir .. "/icons/submenu.png"
 theme.taglist_squares_sel           = themes_dir .. "/icons/square_sel.png"
