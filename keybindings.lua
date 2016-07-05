@@ -71,7 +71,9 @@ return function(boxes, widgets)
     boxes.wi[mouse.screen].visible = not boxes.wi[mouse.screen].visible
   end),
   -- Multi Monitor
-  awful.key({}, "XF86Display", require 'xrandr'),
+  --awful.key({}, "XF86Display", require 'xrandr'),
+  awful.key({}, "F8", require 'xrandr'),
+
   -- Layout manipulation
   awful.key({ modkey, 'Shift'   }, 'j', function () awful.client.swap.byidx(  1)    end),
   awful.key({ modkey, 'Shift'   }, 'k', function () awful.client.swap.byidx( -1)    end),

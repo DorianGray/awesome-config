@@ -357,16 +357,8 @@ function o.widget(promptbox)
 
   local widget = awful.widget.launcher(args)
   menu(args, widget)
-  local t = gears.timer({timeout = 60})
+  local t = gears.timer({timeout = 10})
   t:connect_signal("timeout", function() menu(args, widget) end)
-  t:start()
-  local t = gears.timer({timeout = 30})
-  t:connect_signal("timeout", function()
-    get_net_status(function(up)
-      widget:set_image(icon(o.signal, o.connected, o.internet))
-      widget:emit_signal('widget::updated')
-    end)
-  end)
   t:start()
   awful.tooltip({
     objects={ widget },

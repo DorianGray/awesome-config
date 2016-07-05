@@ -54,10 +54,15 @@ local function menu()
     local cmd = "xrandr"
     -- Enabled outputs
     for i, o in pairs(choice) do
-      cmd = cmd .. " --output " .. o .. " --auto"
-      if i > 1 then
-        cmd = cmd .. " --right-of " .. choice[i-1]
+      cmd = cmd .. " --output " .. o
+      if i > 2 then
+        cmd = cmd .. " --scale 1.5x1.5 --pos 6720x0 "
+      elseif i > 1 then
+        cmd = cmd .. " --scale 1.5x1.5 --pos 0x0 "
+      else
+        cmd = cmd .. " --scale 1x1 --pos 2880x0"
       end
+      cmd = cmd .. " --auto"
     end
     -- Disabled outputs
     for _, o in pairs(out) do
