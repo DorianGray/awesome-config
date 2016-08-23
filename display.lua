@@ -1,37 +1,20 @@
 local awful = require 'awful'
 local naughty = require 'naughty'
-
--- Xrandr settings switcher -- 
--- Get active outputs
-local function outputs()
-  local outputs = {}
-  local xrandr = io.popen("xrandr -q")
-  if xrandr then
-    for line in xrandr:lines() do
-      output = line:match("^([%w-]+) connected ")
-      if output then
-        outputs[#outputs + 1] = output
-      end
-    end
-    xrandr:close()
-  end
-
-  return outputs
-end
+local xrandr = require 'xrandr'
 
 local function arrange(out)
   -- We need to enumerate all the way to combinate output. We assume
   -- we want only an horizontal layout.
   local choices  = {}
   local previous = { {} }
-  for i = 1, #out do
+  for _, _ in pairs(out) do
     -- Find all permutation of length `i`: we take the permutation
     -- of length `i-1` and for each of them, we create new
     -- permutations by adding each output at the end of it if it is
     -- not already present.
     local new = {}
     for _, p in pairs(previous) do
-      for _, o in pairs(out) do
+      for o in pairs(out) do
         if not awful.util.table.hasitem(p, o) then
           new[#new + 1] = awful.util.table.join(p, {o})
         end
@@ -47,7 +30,7 @@ end
 -- Build available choices
 local function menu()
   local menu = {}
-  local out = outputs()
+  local out = xrandr.outputs()
   local choices = arrange(out)
 
   for _, choice in pairs(choices) do
@@ -65,7 +48,7 @@ local function menu()
       cmd = cmd .. " --auto"
     end
     -- Disabled outputs
-    for _, o in pairs(out) do
+    for o in pairs(out) do
       if not awful.util.table.hasitem(choice, o) then
         cmd = cmd .. " --output " .. o .. " --off"
       end

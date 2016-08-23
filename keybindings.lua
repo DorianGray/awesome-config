@@ -72,7 +72,7 @@ return function(boxes, widgets)
   end),
   -- Multi Monitor
   --awful.key({}, "XF86Display", require 'xrandr'),
-  awful.key({}, "F8", require 'xrandr'),
+  awful.key({}, "F8", require 'display'),
 
   -- Layout manipulation
   awful.key({ modkey, 'Shift'   }, 'j', function () awful.client.swap.byidx(  1)    end),

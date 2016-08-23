@@ -59,7 +59,7 @@ local function acpi_battery_percent(battery)
 end
 
 local function acpi_battery_runtime(battery)
-  local output = awful.spawn.pread('acpi')
+  local output = io.popen('acpi'):read()
   local _, _, state, percent, time = output:find('Battery %d+: (%a*), (%d*)%%,? ?(%S*)')
   
   return 'State: '..state..'\r\nCapacity: '..percent..'%'..(time ~= '' and '\r\nRemaining: '..time or '')
