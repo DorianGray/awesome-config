@@ -38,7 +38,7 @@ function task:show(scr_pos)
     local f, c_text
 
     if task.followmouse then
-        local scrp = mouse.screen
+        local scrp = mouse.screen.index
     else
         local scrp = scr_pos or task.scr_pos
     end
@@ -64,7 +64,7 @@ end
 
 function task:prompt_add()
   awful.prompt.run({ prompt = "Add task: " },
-      mypromptbox[mouse.screen].widget,
+      mypromptbox[mouse.screen.index].widget,
       function (...)
           local f = io.popen("task add " .. ...)
           c_text = "\n<span font='"
@@ -89,7 +89,7 @@ end
 
 function task:prompt_search()
   awful.prompt.run({ prompt = "Search task: " },
-      mypromptbox[mouse.screen].widget,
+      mypromptbox[mouse.screen.index].widget,
       function (...)
           local f = io.popen("task " .. ...)
           c_text = f:read("*all"):gsub(" \n*$", "")
@@ -114,7 +114,7 @@ function task:prompt_search()
               fg       = task.fg,
               bg       = task.bg,
               timeout  = task.timeout,
-              screen   = mouse.screen
+              screen   = mouse.screen.index
           })
       end,
       nil,

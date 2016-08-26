@@ -1,6 +1,7 @@
 local awful = require 'awful'
 local lain = require 'lain'
 local DIR = require 'pl.path'.dirname(debug.getinfo(1,'S').source:sub(2))
+local mouse = require 'mouse'
 
 local layouts    = require 'layouts'
 local modkey     = 'Mod4'
@@ -68,7 +69,7 @@ return function(boxes, widgets)
 
   -- Show/Hide Wibox
   awful.key({ modkey }, 'b', function ()
-    boxes.wi[mouse.screen].visible = not boxes.wi[mouse.screen].visible
+    boxes.wi[mouse.screen.index].visible = not boxes.wi[mouse.screen.index].visible
   end),
   -- Multi Monitor
   --awful.key({}, "XF86Display", require 'xrandr'),
@@ -121,11 +122,11 @@ return function(boxes, widgets)
   awful.key({ modkey }, 'c', function () os.execute('xsel -p -o | xsel -i -b') end),
 
   -- Prompt
-  awful.key({ modkey }, 'r', function () boxes.prompt[mouse.screen]:run() end),
+  awful.key({ modkey }, 'r', function () boxes.prompt[mouse.screen.index]:run() end),
   awful.key({ modkey }, 'x',
   function ()
     awful.prompt.run({ prompt = 'Run Lua code: ' },
-    boxes.prompt[mouse.screen].widget,
+    boxes.prompt[mouse.screen.index].widget,
     awful.util.eval, nil,
     awful.util.getdir('cache') .. '/history_eval')
   end))
@@ -158,7 +159,7 @@ return function(boxes, widgets)
     -- View tag only.
     awful.key({ modkey }, '#' .. i + 9,
     function ()
-      local screen = mouse.screen
+      local screen = mouse.screen.index
       local tag = awful.tag.gettags(screen)[i]
       if tag then
         awful.tag.viewonly(tag)
@@ -167,7 +168,7 @@ return function(boxes, widgets)
     -- Toggle tag.
     awful.key({ modkey, 'Control' }, '#' .. i + 9,
     function ()
-      local screen = mouse.screen
+      local screen = mouse.screen.index
       local tag = awful.tag.gettags(screen)[i]
       if tag then
         awful.tag.viewtoggle(tag)

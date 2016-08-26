@@ -58,7 +58,7 @@ local function worker(args)
         weather.hide()
 
         if followmouse then
-            notification_preset.screen = mouse.screen
+            notification_preset.screen = mouse.screen.index
         end
 
         weather.notification = naughty.notify({

@@ -77,7 +77,7 @@ return function(widgets, icons, boxes, taglist)
     tasklists[s] = awful.widget.tasklist(s, awful.widget.tasklist.filter.currenttags, tasklists.buttons)
 
     -- Create the wibox
-    boxes.wi[s] = awful.wibox({ position = 'top', screen = s, height = 32 })
+    boxes.wi[s] = awful.wibar({ position = 'top', screen = s, height = 32 })
 
     -- Widgets that are aligned to the upper left
     local left_layout = wibox.layout.fixed.horizontal()
@@ -96,7 +96,7 @@ return function(widgets, icons, boxes, taglist)
       if right_layout_toggle then
         right_layout:add(arrl_ld)
         for i, n in pairs(arg) do
-          right_layout:add(wibox.widget.background(n ,beautiful.bg_focus))
+          right_layout:add(wibox.container.background(n ,beautiful.bg_focus))
         end
       else
         right_layout:add(arrl_dl)

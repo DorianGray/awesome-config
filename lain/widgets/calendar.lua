@@ -91,7 +91,7 @@ function calendar:show(t_out, inc_offset, scr)
     f:close()
 
     if calendar.followmouse then
-        scrp = mouse.screen
+        scrp = mouse.screen.index
     else
         scrp = scr or calendar.scr_pos
     end

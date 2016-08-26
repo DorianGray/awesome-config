@@ -104,7 +104,7 @@ local function worker(args)
                     end
 
                     if followmouse then
-                        mpd_notification_preset.screen = mouse.screen
+                        mpd_notification_preset.screen = mouse.screen.index
                     end
 
                     mpd.id = naughty.notify({

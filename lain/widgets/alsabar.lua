@@ -77,7 +77,7 @@ function alsabar.notify()
                 .. "]"
 
     if alsabar.followmouse then
-        preset.screen = mouse.screen
+        preset.screen = mouse.screen.index
     end
 
     if alsabar._notify ~= nil then

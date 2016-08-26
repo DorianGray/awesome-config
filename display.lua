@@ -100,7 +100,7 @@ local function xrandr()
   state.cid = naughty.notify({ text = label,
   icon = icon,
   timeout = 4,
-  screen = mouse.screen, -- Important, not all screens may be visible
+  screen = mouse.screen.index, -- Important, not all screens may be visible
   font = "Free Sans 18",
   replaces_id = state.cid }).id
 

@@ -41,7 +41,7 @@ function fs:show(t_out)
     local ws = helpers.read_pipe(helpers.scripts_dir .. "dfs"):gsub("\n*$", "")
 
     if fs.followmouse then
-        fs.notification_preset.screen = mouse.screen
+        fs.notification_preset.screen = mouse.screen.index
     end
 
     fs_notification = naughty.notify({

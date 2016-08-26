@@ -55,7 +55,7 @@ local function worker(args)
         }
 
         if followmouse then
-            mail_notification_preset.screen = mouse.screen
+            mail_notification_preset.screen = mouse.screen.index
         end
 
         curl = string.format("%s --url imaps://%s:%s/INBOX -u %s:%q %s -k",

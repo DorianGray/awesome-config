@@ -84,7 +84,7 @@ local function worker(args)
                                moc_now.file, cover_size, default_art))
 
                     if followmouse then
-                        moc_notification_preset.screen = mouse.screen
+                        moc_notification_preset.screen = mouse.screen.index
                     end
 
                     moc.id = naughty.notify({

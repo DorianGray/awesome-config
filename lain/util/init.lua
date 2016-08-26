@@ -33,7 +33,7 @@ local util = { _NAME = "lain.util" }
 -- tags.
 function util.menu_clients_current_tags(menu, args)
     -- List of currently selected tags.
-    local cls_tags = awful.tag.selectedlist(mouse.screen)
+    local cls_tags = awful.tag.selectedlist(mouse.screen.index)
 
     -- Final list of menu items.
     local cls_t = {}
@@ -78,8 +78,8 @@ function util.magnify_client(c)
     if not awful.client.floating.get(c) then
         awful.client.floating.set(c, true)
 
-        local mg = screen[mouse.screen].geometry
-        local tag = awful.tag.selected(mouse.screen)
+        local mg = screen[mouse.screen.index].geometry
+        local tag = awful.tag.selected(mouse.screen.index)
         local mwfact = awful.tag.getmwfact(tag)
         local g = {}
         g.width = math.sqrt(mwfact) * mg.width
@@ -143,7 +143,7 @@ end
 -- Non-empty tag browsing
 -- direction in {-1, 1} <-> {previous, next} non-empty tag
 function util.tag_view_nonempty(direction, sc)
-   local s = sc or mouse.screen or 1
+   local s = sc or mouse.screen.index or 1
    local scr = screen[s]
 
    for i = 1, #awful.tag.gettags(s) do
@@ -158,7 +158,7 @@ end
 --
 -- Add a new tag
 function util.add_tag(mypromptbox)
-    awful.prompt.run({prompt="New tag name: "}, mypromptbox[mouse.screen].widget,
+    awful.prompt.run({prompt="New tag name: "}, mypromptbox[mouse.screen.index].widget,
     function(text)
         if text:len() > 0 then
             props = { selected = true }
@@ -172,8 +172,8 @@ end
 -- Rename current tag
 -- @author: minism
 function util.rename_tag(mypromptbox)
-    local tag = awful.tag.selected(mouse.screen)
-    awful.prompt.run({prompt="Rename tag: "}, mypromptbox[mouse.screen].widget,
+    local tag = awful.tag.selected(mouse.screen.index)
+    awful.prompt.run({prompt="Rename tag: "}, mypromptbox[mouse.screen.index].widget,
     function(text)
         if text:len() > 0 then
             tag.name = text
@@ -185,7 +185,7 @@ end
 -- Move current tag
 -- pos in {-1, 1} <-> {previous, next} tag position
 function util.move_tag(pos)
-    local tag = awful.tag.selected(mouse.screen)
+    local tag = awful.tag.selected(mouse.screen.index)
     local idx = awful.tag.getidx(tag)
     if tonumber(pos) <= -1 then
         awful.tag.move(idx - 1, tag)
@@ -197,8 +197,8 @@ end
 -- Remove current tag (if empty)
 -- Any rule set on the tag shall be broken
 function util.remove_tag()
-    local tag = awful.tag.selected(mouse.screen)
-    local prevtag = awful.tag.gettags(mouse.screen)[awful.tag.getidx(tag) - 1]
+    local tag = awful.tag.selected(mouse.screen.index)
+    local prevtag = awful.tag.gettags(mouse.screen.index)[awful.tag.getidx(tag) - 1]
     awful.tag.delete(tag, prevtag)
 end
 --
@@ -207,13 +207,13 @@ end
 -- On the fly useless gaps change
 function util.useless_gaps_resize(thatmuch)
     beautiful.useless_gap_width = tonumber(beautiful.useless_gap_width) + thatmuch
-    awful.layout.arrange(mouse.screen)
+    awful.layout.arrange(mouse.screen.index)
 end
 
 -- On the fly global border change
 function util.global_border_resize(thatmuch)
     beautiful.global_border_width = tonumber(beautiful.global_border_width) + thatmuch
-    awful.layout.arrange(mouse.screen)
+    awful.layout.arrange(mouse.screen.index)
 end
 
 -- Check if an element exist on a table
