@@ -18,7 +18,7 @@ awful.rules.rules = {
     size_hints_honor = false
   }},
 
-  {rule = {class = 'urxvt', class='google-chrome'},
+  {rule = {class = 'urxvt', class='google-chrome', class='Google-chrome'},
   properties = {
     y = systray,
     x = 0,
@@ -31,7 +31,7 @@ awful.rules.rules = {
     height = screen[1].workarea.height-systray,
   }},
 
-  {rule = {class = 'google-chrome'},
+  {rule = {class = 'google-chrome', class = 'Google-chrome'},
   callback = function(c)
     local s, t = 1, 2
     if screen.count() >= 2 then
