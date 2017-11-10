@@ -1,6 +1,7 @@
 local awful = require 'awful'
 local naughty = require 'naughty'
 local xrandr = require 'xrandr'
+local theme = require 'theme'
 
 local function arrange(out)
   -- We need to enumerate all the way to combinate output. We assume
@@ -37,15 +38,14 @@ local function menu()
     local cmd = "xrandr"
     -- Enabled outputs
     for i, o in pairs(choice) do
-      cmd = cmd .. " --output " .. o
+      cmd = cmd .. " --output " .. o .. ' --auto'
       if i > 2 then
         cmd = cmd .. " --scale 1.5x1.5 --pos 6720x0 "
       elseif i > 1 then
         cmd = cmd .. " --scale 1.5x1.5 --pos 0x0 "
       else
-        cmd = cmd .. " --scale 1x1 --pos 2880x0"
+        cmd = cmd .. " --scale 1x1 --pos 2880x0 --primary"
       end
-      cmd = cmd .. " --auto"
     end
     -- Disabled outputs
     for o in pairs(out) do
@@ -101,7 +101,7 @@ local function xrandr()
   icon = icon,
   timeout = 4,
   screen = mouse.screen.index, -- Important, not all screens may be visible
-  font = "Free Sans 18",
+  font = theme.font,
   replaces_id = state.cid }).id
 
   -- Setup the timer

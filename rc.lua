@@ -7,6 +7,7 @@ local beautiful = require 'beautiful'
 local naughty   = require 'naughty'
 local lain      = require 'lain'
 local layouts   = require 'layouts'
+local theme     = require 'theme'
 
 -- Error handling
 if awesome.startup_errors then
@@ -60,7 +61,10 @@ widgets.clock = lain.widgets.abase({
 
 -- calendar
 widgets.calendar = lain.widgets.calendar
-widgets.calendar:attach(widgets.clock, { font_size = 10 })
+widgets.calendar:attach(widgets.clock, {
+  font = 'Inconsolata Bold',
+  font_size = theme.font_size,
+})
 
 --Alt Tab
 widgets.alttab = require 'widget.alttab'

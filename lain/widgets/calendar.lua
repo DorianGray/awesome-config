@@ -82,12 +82,16 @@ function calendar:show(t_out, inc_offset, scr)
             calendar.post_cal)
     end
 
+    month_year = f:read()
+    days_of_week = f:read()
+    days = f:read("*all"):gsub("\n*$", ""):gsub("%s(%d%s)", " %1")
     c_text = "<tt><span font='" .. calendar.font .. " "
              .. calendar.font_size .. "'><b>"
-             .. f:read() .. "</b>\n\n"
-             .. f:read() .. "\n"
-             .. f:read("*all"):gsub("\n*$", "")
+             .. month_year .. "</b>\n\n"
+             .. days_of_week .. "\n"
+             .. days
              .. "</span></tt>"
+
     f:close()
 
     if calendar.followmouse then
