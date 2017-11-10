@@ -4,7 +4,7 @@ local naughty = require 'naughty'
 
 local tags = require 'tags'
 
-local systray = 16
+local systray = 32
 -- Rules
 awful.rules.rules = {
   -- All clients will match this rule.
@@ -28,7 +28,7 @@ awful.rules.rules = {
   properties = {
     tag = tags[1][1],
     width = screen[1].workarea.width,
-    height = screen[1].workarea.height-systray,
+    height = screen[1].workarea.height,
   }},
 
   {rule = {class = 'google-chrome', class = 'Google-chrome'},
@@ -41,7 +41,7 @@ awful.rules.rules = {
 
     c:geometry({
       width = screen[s].workarea.width,
-      height = screen[s].workarea.height-systray,
+      height = screen[s].workarea.height,
     })
   end},
 }

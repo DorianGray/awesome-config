@@ -3,7 +3,7 @@ theme                               = {}
 themes_dir                          = os.getenv("HOME") .. "/.config/awesome/theme"
 theme.wallpaper                     = themes_dir .. "/wall.jpg"
 
-theme.font                          = "Inconsolata-dz for Powerline Bold 14"
+theme.font                          = "Inconsolata-dz for Powerline Bold 5.5"
 theme.fg_normal                     = "#DDDDFF"
 theme.fg_focus                      = "#FFFFFF"
 theme.fg_urgent                     = "#CC9393"

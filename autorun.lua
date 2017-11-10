@@ -13,7 +13,12 @@ local function run_once(cmd, match)
 end
 
 local autorunApps = { 
-  ['google-chrome'] = {cmd='--process-per-site --high-dpi-support=1 --force-device-scale-factor=1.5 --touch-events=enabled', match='chrome'},
+  ['google-chrome'] = {cmd=table.concat({
+    '--process-per-site',
+    '--high-dpi-support=1',
+    '--force-device-scale-factor=1.5',
+    '--touch-events=enabled',
+  }), match='chrome'},
   ['urxvtcd'] = {cmd=table.concat({
     '-loginShell',
     '-bc',
@@ -26,6 +31,14 @@ local autorunApps = {
   ['pulseaudio'] = {cmd='-D'},
   ['unclutter'] = {cmd='-root'},
   ['udiskie'] = {},
+  ['compton'] = {cmd=table.concat({
+    '-b',
+    '-c',
+    '--paint-on-overlay',
+    '--backend glx',
+    '--vsync',
+    'opengl-swc',
+  }, ' ')},
 }
 for app, config in pairs(autorunApps) do
   run_once(app..(config.cmd and ' '..config.cmd or ''), config.match)
