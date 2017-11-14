@@ -18,7 +18,7 @@ local autorunApps = {
     '--high-dpi-support=1',
     '--force-device-scale-factor=1.5',
     '--touch-events=enabled',
-  }), match='chrome'},
+  }, ' '), match='chrome'},
   ['urxvtcd'] = {cmd=table.concat({
     '-loginShell',
     '-bc',

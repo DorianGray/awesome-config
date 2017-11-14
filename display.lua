@@ -3,6 +3,7 @@ local naughty = require 'naughty'
 local xrandr = require 'xrandr'
 local theme = require 'theme'
 
+
 local function arrange(out)
   -- We need to enumerate all the way to combinate output. We assume
   -- we want only an horizontal layout.
@@ -38,14 +39,15 @@ local function menu()
     local cmd = "xrandr"
     -- Enabled outputs
     for i, o in pairs(choice) do
-      cmd = cmd .. " --output " .. o .. ' --auto'
+      cmd = cmd .. " --output " .. o
       if i > 2 then
         cmd = cmd .. " --scale 1.5x1.5 --pos 6720x0 "
       elseif i > 1 then
         cmd = cmd .. " --scale 1.5x1.5 --pos 0x0 "
       else
-        cmd = cmd .. " --scale 1x1 --pos 2880x0 --primary"
+        cmd = cmd .. " --scale 1x1 --pos 2880x0"
       end
+      cmd = cmd .. " --auto"
     end
     -- Disabled outputs
     for o in pairs(out) do
