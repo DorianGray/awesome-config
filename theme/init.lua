@@ -4,7 +4,7 @@ themes_dir                          = os.getenv("HOME") .. "/.config/awesome/the
 theme.wallpaper                     = themes_dir .. "/wall.jpg"
 
 theme.font_name                     = "Inconsolata-dz for Powerline Bold"
-theme.font_size                     = "5.5"
+theme.font_size                     = "20px"
 theme.font                          = table.concat({
                                       theme.font_name,
                                       theme.font_size,

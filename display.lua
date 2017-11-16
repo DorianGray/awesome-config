@@ -1,3 +1,4 @@
+local awesome = require 'awesome'
 local awful = require 'awful'
 local naughty = require 'naughty'
 local xrandr = require 'xrandr'
@@ -36,23 +37,34 @@ local function menu()
   local choices = arrange(out)
 
   for _, choice in pairs(choices) do
-    local cmd = "xrandr"
+    local cmd_t = {'xrandr'}
+    local last_o = 1
+    local primary = nil
     -- Enabled outputs
     for i, o in pairs(choice) do
-      cmd = cmd .. " --output " .. o
-      if i > 2 then
-        cmd = cmd .. " --scale 1.5x1.5 --pos 6720x0 "
-      elseif i > 1 then
-        cmd = cmd .. " --scale 1.5x1.5 --pos 0x0 "
-      else
-        cmd = cmd .. " --scale 1x1 --pos 2880x0"
+      local cmd = "--output " .. o .. " --crtc " .. (i - 1)
+      local insert_position = nil
+      if i == 1 then
+        primary = o
+        cmd = cmd .. " --primary --pos 2880x0"
+      elseif i == 2 then
+        cmd = cmd .. " --pos 0x0 --scale 1.5x1.5"
+        insert_position = 2
+      elseif i > 2 then
+        cmd = cmd .. " --pos 6720x0 --scale 1.5x1.5"
+        last_o = o
       end
-      cmd = cmd .. " --auto"
+      cmd = cmd .. ' --auto'
+      if insert_position then
+        table.insert(cmd_t, insert_position, cmd)
+      else
+        table.insert(cmd_t, cmd)
+      end
     end
     -- Disabled outputs
     for o in pairs(out) do
       if not awful.util.table.hasitem(choice, o) then
-        cmd = cmd .. " --output " .. o .. " --off"
+        table.insert(cmd_t, " --output " .. o .. " --off")
       end
     end
 
@@ -65,9 +77,11 @@ local function menu()
         label = label .. '<span weight="bold">' .. o .. '</span>'
       end
     end
-
+    --[[naughty.notify({ preset = naughty.config.presets.critical,
+                     title = "lol",
+                     text = table.concat(cmd_t, ' ') })]]
     menu[#menu + 1] = { label,
-    cmd,
+    table.concat(cmd_t, ' '),
     "/usr/share/icons/Tango/32x32/devices/display.png"}
   end
   return menu
@@ -91,13 +105,13 @@ local function xrandr()
   end
 
   -- Select one and display the appropriate notification
-  local next  = state.iterator()
+  local n  = state.iterator()
   local label, action, icon
-  if not next then
+  if not n then
     label, icon = "Keep the current configuration", "/usr/share/icons/Tango/32x32/devices/display.png"
     state.iterator = nil
   else
-    label, action, icon = unpack(next)
+    label, action, icon = unpack(n)
   end
   state.cid = naughty.notify({ text = label,
   icon = icon,
@@ -114,7 +128,8 @@ local function xrandr()
     state.timer = nil
     state.iterator = nil
     if action then
-      awful.util.spawn(action, false)
+      awful.spawn(action)
+      awesome.restart()
     end
   end)
   state.timer:start()

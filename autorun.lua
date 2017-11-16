@@ -31,14 +31,14 @@ local autorunApps = {
   ['pulseaudio'] = {cmd='-D'},
   ['unclutter'] = {cmd='-root'},
   ['udiskie'] = {},
-  ['compton'] = {cmd=table.concat({
+  --[[['compton'] = {cmd=table.concat({
     '-b',
     '-c',
     '--paint-on-overlay',
     '--backend glx',
     '--vsync',
     'opengl-swc',
-  }, ' ')},
+  }, ' ')},]]
 }
 for app, config in pairs(autorunApps) do
   run_once(app..(config.cmd and ' '..config.cmd or ''), config.match)
