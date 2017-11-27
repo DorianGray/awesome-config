@@ -63,7 +63,7 @@ widgets.clock = lain.widgets.abase({
 widgets.calendar = lain.widgets.calendar
 widgets.calendar:attach(widgets.clock, {
   font = 'Inconsolata Bold',
-  font_size = theme.font_size,
+  font_size = '5.5',
 })
 
 --Alt Tab
