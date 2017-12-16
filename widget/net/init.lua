@@ -92,13 +92,13 @@ local function connect_wifi(ssid, security, cb)
       run('nmcli connection up '..escape(ssid), function(output) end)
     else
       if security == "--" then
-        run('nmcli device wifi connect '..escape(ssid), function(output)
+        run('nmcli device wifi connect "'..escape(ssid)..'"', function(output)
           cb(output)
         end)
       else
         awful.prompt.run({ prompt = "Password for "..ssid..": " },
         o.promptbox[mouse.screen.index].widget, function(password)
-          run('nmcli device wifi connect '..escape(ssid)..' password '..escape(password), function(output)
+          run('nmcli device wifi connect "'..escape(ssid)..'" password '..escape(password), function(output)
             cb(output)
           end)
         end)
