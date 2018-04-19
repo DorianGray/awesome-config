@@ -11,7 +11,9 @@ return function(boxes, widgets)
   -- Key bindings
   local globalkeys = awful.util.table.join(
 
-  awful.key({ altkey }, 'p', function() awful.spawn.with_shell('gnome-screenshot -c') end),
+  awful.key({ }, "Print", function ()
+      awful.util.spawn_with_shell("sleep 0.5 && scrot -s")
+  end), 
 
   -- Tag browsing
   awful.key({ modkey }, 'Left',   awful.tag.viewprev       ),
@@ -19,20 +21,20 @@ return function(boxes, widgets)
   awful.key({ modkey }, 'Escape', awful.tag.history.restore),
 
   -- Non-empty tag browsing
-  awful.key({ altkey }, 'Left', function () lain.util.tag_view_nonempty(-1) end),
-  awful.key({ altkey }, 'Right', function () lain.util.tag_view_nonempty(1) end),
+  awful.key({ altkey }, 'Left', function ()
+    lain.util.tag_view_nonempty(-1)
+  end),
+  awful.key({ altkey }, 'Right', function ()
+    lain.util.tag_view_nonempty(1)
+  end),
   -- Alt Tab
-  awful.key({ altkey }, "Tab",
-  function ()
+  awful.key({ altkey }, "Tab", function ()
     widgets.alttab.switch(1, "Alt_L", "Tab", "ISO_Left_Tab")
-  end	     
-  ),
+  end),
 
-  awful.key({ altkey, "Shift"   }, "Tab",
-  function ()
+  awful.key({ altkey, "Shift"   }, "Tab", function ()
     widgets.alttab.switch(-1, "Alt_L", "Tab", "ISO_Left_Tab")
-  end
-  ),
+  end),
   -- Default client focus
   awful.key({ altkey }, 'k',
   function ()
@@ -76,10 +78,18 @@ return function(boxes, widgets)
   awful.key({}, "F8", require 'display'),
 
   -- Layout manipulation
-  awful.key({ modkey, 'Shift'   }, 'j', function () awful.client.swap.byidx(  1)    end),
-  awful.key({ modkey, 'Shift'   }, 'k', function () awful.client.swap.byidx( -1)    end),
-  awful.key({ modkey, 'Control' }, 'j', function () awful.screen.focus_relative( 1) end),
-  awful.key({ modkey, 'Control' }, 'k', function () awful.screen.focus_relative(-1) end),
+  awful.key({ modkey, 'Shift'   }, 'j', function ()
+    awful.client.swap.byidx(1)
+  end),
+  awful.key({ modkey, 'Shift'   }, 'k', function ()
+    awful.client.swap.byidx(-1)
+  end),
+  awful.key({ modkey, 'Control' }, 'j', function ()
+    awful.screen.focus_relative(1)
+  end),
+  awful.key({ modkey, 'Control' }, 'k', function ()
+    awful.screen.focus_relative(-1)
+  end),
   awful.key({ modkey,           }, 'u', awful.client.urgent.jumpto),
   awful.key({ modkey,           }, 'Tab',
   function ()

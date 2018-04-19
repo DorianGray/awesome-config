@@ -29,16 +29,8 @@ local autorunApps = {
     '-e '..os.getenv('HOME')..'/.config/awesome/tmux-session.sh awesome',
   }, ' '), match='tmux'},
   ['pulseaudio'] = {cmd='-D'},
-  ['unclutter'] = {cmd='-root'},
   ['udiskie'] = {},
-  --[[['compton'] = {cmd=table.concat({
-    '-b',
-    '-c',
-    '--paint-on-overlay',
-    '--backend glx',
-    '--vsync',
-    'opengl-swc',
-  }, ' ')},]]
+  ['unclutter'] = {cmd='-root'},
 }
 for app, config in pairs(autorunApps) do
   run_once(app..(config.cmd and ' '..config.cmd or ''), config.match)

@@ -76,7 +76,7 @@ for s = 1, screen.count() do screen[s]:connect_signal('arrange',
 
     if #clients > 0 then -- Fine grained borders and floaters control
       for _, c in pairs(clients) do -- Floaters always have borders
-        if awful.client.floating.get(c) or layout == 'floating' then
+        if c.floating or layout == 'floating' then
           c.border_width = beautiful.border_width
 
           -- No borders with only one visible client
