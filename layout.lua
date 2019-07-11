@@ -1,16 +1,21 @@
 local wibox = require 'wibox'
 local beautiful = require 'beautiful'
 local awful = require 'awful'
-local lain = require 'lain'
+local separator = require 'widget.separator'
 local layouts  = require 'layouts'
+local theme = require 'theme'
+local screen = require 'screen'
+local form = require 'widget.form'
+local form_textbox = require 'widget.form.textbox'
+local slideout_panel = require 'widget.slideout_panel'
+
 
 return function(widgets, icons, boxes, taglist)
   -- Wibox
-  local separators = lain.util.separators
   -- Separators
   local spr = wibox.widget.textbox(' ')
-  local arrl_dl = separators.arrow_left(beautiful.bg_focus, 'alpha')
-  local arrl_ld = separators.arrow_left('alpha', beautiful.bg_focus)
+  local arrl_dl = separator.arrow_left(beautiful.bg_focus, 'alpha')
+  local arrl_ld = separator.arrow_left('alpha', beautiful.bg_focus)
 
   -- Create a wibox for each screen and add it
   taglist.buttons = awful.util.table.join(
@@ -45,7 +50,7 @@ return function(widgets, icons, boxes, taglist)
       instance:hide()
       instance = nil
     else
-      instance = awful.menu.clients({ width=250 })
+      instance = awful.menu.clients({ width=250 * theme.scale })
     end
   end),
   awful.button({ }, 4, function ()
@@ -57,7 +62,7 @@ return function(widgets, icons, boxes, taglist)
     if client.focus then client.focus:raise() end
   end))
 
-  for s = 1, screen.count() do
+  for s in screen do
 
     -- Create a promptbox for each screen
     boxes.prompt[s] = awful.widget.prompt()
@@ -77,7 +82,7 @@ return function(widgets, icons, boxes, taglist)
     tasklists[s] = awful.widget.tasklist(s, awful.widget.tasklist.filter.currenttags, tasklists.buttons)
 
     -- Create the wibox
-    boxes.wi[s] = awful.wibar({ position = 'top', screen = s, height = 32 })
+    boxes.wi[s] = awful.wibar({ position = 'top', screen = s, height = 32 * theme.scale })
 
     -- Widgets that are aligned to the upper left
     local left_layout = wibox.layout.fixed.horizontal()
@@ -120,5 +125,6 @@ return function(widgets, icons, boxes, taglist)
     layout:set_middle(tasklists[s])
     layout:set_right(right_layout)
     boxes.wi[s]:set_widget(layout)
+    s.right_panel = slideout_panel(s, 'right')
   end
 end

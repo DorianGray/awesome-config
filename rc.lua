@@ -1,3 +1,4 @@
+local os = require 'os'
 local gears     = require 'gears'
 local awful     = require 'awful'
 awful.rules     = require 'awful.rules'
@@ -5,9 +6,13 @@ require 'awful.autofocus'
 local wibox     = require 'wibox'
 local beautiful = require 'beautiful'
 local naughty   = require 'naughty'
-local lain      = require 'lain'
 local layouts   = require 'layouts'
 local theme     = require 'theme'
+
+-- Add local luarocks repo to package.path
+package.path = os.getenv('HOME')..'/.luarocks/share/lua/5.1/?.lua;'..os.getenv('HOME')..'/.luarocks/share/lua/5.1/?/init.lua;'..package.path
+package.cpath = os.getenv('HOME')..'/.luarocks/lib/lua/5.1/?.so;'..os.getenv('HOME')..'/.luarocks/lib/lua/5.1/?/init.so;'..package.cpath
+
 
 -- Error handling
 if awesome.startup_errors then
@@ -51,20 +56,13 @@ local boxes = {
 local taglist = {}
 
 -- Textclock
-widgets.clock = lain.widgets.abase({
-  timeout  = 60,
-  cmd      = 'date +\'%R\'',
-  settings = function()
-    widget:set_text(' ' .. output)
-  end
-})
-
+widgets.clock = wibox.widget.textclock('%H:%M')
 -- calendar
-widgets.calendar = lain.widgets.calendar
-widgets.calendar:attach(widgets.clock, {
-  font = 'Inconsolata Bold',
-  font_size = '5.5',
+widgets.calendar = awful.widget.calendar_popup.month({
+  font=theme.font_name..' '..theme.font_size,
+  start_sunday=true,
 })
+widgets.calendar:attach(widgets.clock, "tr")
 
 --Alt Tab
 widgets.alttab = require 'widget.alttab'
@@ -80,14 +78,14 @@ widgets.alttab.settings.client_opacity_delay = 150
 
 -- Battery
 widgets.battery = require 'widget.battery'({
-  width = 30,
-  height = 10,
-  bolt_width = 30,
-  bolt_height = 15,
-  stroke_width = 2,
-  peg_top = 4,
-  peg_height = 6,
-  peg_width = 4,
+  width = 30 * theme.scale,
+  height = 10 * theme.scale,
+  bolt_width = 30 * theme.scale,
+  bolt_height = 15 * theme.scale,
+  stroke_width = 2 * theme.scale,
+  peg_top = 4 * theme.scale,
+  peg_height = 6 * theme.scale,
+  peg_width = 4 * theme.scale,
   font = beautiful.font,
   critical_level = 0.10,
   normal_color = beautiful.fg_normal,

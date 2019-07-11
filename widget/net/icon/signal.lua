@@ -49,25 +49,36 @@ local function draw_signal(surface, signal, connected, color)
   end
 end
 
-local function icon_generate(width, height, signal, connected, internet)
+local function draw_frequency(surface, frequency, color)
+  local char = tostring(frequency):sub(1, 1)
+  local cr = lgi.cairo.Context(surface)
+  cr:set_fill_rule(lgi.cairo.FillRule.EVEN_ODD)
+  cr:set_source(color)
+  cr:move_to(surface.width * 0.7, surface.height * 0.9)
+  cr:set_font_size(20.0)
+  cr:show_text(char)
+  cr:fill()
+end
+
+local function icon_generate(width, height, signal, frequency, connected, internet)
   -- Sanity check on the percentage
   if signal > 100 then signal = 100 end
   if signal < 0 then signal = 0 end
 
   local surface = lgi.cairo.ImageSurface(lgi.cairo.Format.ARGB32, width, height)
   draw_signal(surface, 100, true, color('#44444499'))
-  draw_signal(surface, signal, connected, color(beautiful.fg_normal), 1)
+  draw_signal(surface, signal, connected, color(beautiful.fg_normal))
   if not connected or not internet then
     surface = recolor(surface, color(beautiful.fg_urgent))
+  end
+  if frequency and frequency > 0 then
+    draw_frequency(surface, frequency, color(beautiful.fg_normal))
   end
   return surface
 end
 
 return function(width, height)
-  return function(signal, connected, internet)
---[[    signal = 50
-    connected = true
-    internet = true]]
-    return icon_generate(width, height, signal, connected, internet)
+  return function(signal, frequency, connected, internet)
+    return icon_generate(width, height, signal, frequency, connected, internet)
   end
 end

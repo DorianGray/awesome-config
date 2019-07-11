@@ -1,18 +1,30 @@
 local wibox = require 'wibox'
 local awful = require 'awful'
-local gears = require 'gears'
-local naughty = require 'naughty'
 local beautiful = require 'beautiful'
 local string = require 'string'
 local table = require 'table'
-local asyncshell = require 'lain.asyncshell'
-local icon = require 'widget.net.icon.signal'(32,32)
-local lgi = require 'lgi'
+local theme = require 'theme'
+local icon = require 'widget.net.icon.signal'(
+  32 * theme.scale,
+  32 * theme.scale
+)
+local mouse = require 'mouse'
+local gears = require 'gears'
+local form = require 'widget.form'
+local form_textbox = require 'widget.form.textbox'
 
-local o = {connected = false, signal = 0, internet = true}
+local o = {
+  connected = false,
+  signal = 0,
+  frequency = 0,
+  encryption = nil,
+  internet = true,
+}
+
+local generate_menu
 
 local function run(command, callback)
-  return asyncshell.request(command, callback)
+  return awful.spawn.easy_async_with_shell(command, callback)
 end
 
 local function trim(s)
@@ -60,17 +72,118 @@ local function get_net_status(cb)
   ping()
 end
 
+local NET_STATUS = {
+  UP='connected',
+  DOWN='disconnected',
+}
+
+local function parse_ip_link(output, iw_output)
+  local sep = '\n'
+  local groups = {{'INTERFACE', 'TYPE', 'STATUS', ''}}
+
+  local function add_group(group)
+    str = table.concat(group, sep)
+    local _, _, ifname, iftype, ifstatus = str:find('%d:%s+(%S*):%s+<(%S*)>.*state%s+(%S*)')
+    ifstatus = NET_STATUS[ifstatus] or 'unavailable'
+    if iftype:match('LOOPBACK') then
+      iftype = 'loopback'
+      ifstatus = NET_STATUS['UP']
+    elseif iw_output:match(ifname) then
+      iftype = 'wireless'
+    elseif iftype:match('BROADCAST,MULTICAST') then
+      iftype = 'ethernet'
+    else
+      iftype = 'unknown'
+    end
+    groups[#groups+1] = {ifname, iftype, ifstatus, ''}
+  end
+
+  local group = {}
+  for str in string.gmatch(output, '([^'..sep..']+)') do
+    if str:match('^%d:') and #group > 0 then
+      add_group(group)
+      group = {str}
+    else
+      group[#group+1]=str
+    end
+  end
+  add_group(group)
+
+  return groups
+end
+
 --Make a table of the local interfaces
 local function get_local_interfaces(cb)
-  run('nmcli device', function(output)
-    cb(parse_command(output))
+  run('ip link', function(output)
+    run('iw dev', function(iw_output)
+      cb(parse_ip_link(output, iw_output))
+    end)
   end)
 end
 
+local function get_wifi_link(iface, cb)
+  run('iw dev '..iface[1]..' link', function(iw_output)
+    local _, _, ssid = iw_output:find('\n%s+SSID:%s*([^\n]*)\n')
+    if ssid then
+      local _, _, signal = iw_output:find('\n%s+signal:%s+-([^\n]+)%sdBm\n')
+      local _, _, frequency = iw_output:find('\n%s+freq:%s*([^\n]*)\n')
+      run('wpa_cli status', function(wpa_output)
+        return cb({ssid=ssid, signal=tonumber(signal), frequency=tonumber(frequency),})
+      end)
+    end
+    return cb(nil)
+  end)
+end
+
+local scan_timer = nil
 --make a table of the scanned wifis
-local function get_area_wifi(cb)
-  run('nmcli --fields SECURITY,SSID,SIGNAL,IN-USE device wifi', function(output)
-    cb(parse_command(output))
+local function get_area_wifi(widget, iface, cb)
+  run('wpa_cli abort_scan && wpa_cli scan', function(scan_output)
+    if scan_output:match('FAIL') then
+      if scan_timer and scan_timer.started then
+        scan_timer:stop()
+      end
+      cb({})
+    end
+    if scan_timer and scan_timer.started then
+      return
+    end
+    if not scan_timer then
+      scan_timer = gears.timer({
+        timeout   = 1,
+        autostart = false,
+        callback  = function()
+          run('wpa_cli scan_results', function(output)
+            local _, count = output:gsub('\n', '\n')
+            if count <= 3 then
+              if scan_timer.started then
+                scan_timer.timeout = 3
+                return
+              end
+            end
+            scan_timer:stop()
+            local networks = {}
+            local skip = 1
+            for line in output:gmatch('[^\r\n]+') do
+              if skip <= 2 then
+                skip = skip + 1
+              else
+                local _, _, bssid, frequency, signal, encryption, ssid = line:find("([^\t]*)\t([^\t]*)\t([^\t]*)\t([^\t]*)\t([^\t]*)")
+                table.insert(networks, {
+                  bssid=bssid,
+                  frequency=tonumber(frequency),
+                  signal=tonumber(signal),
+                  encryption=encryption,
+                  ssid=ssid,
+                })
+              end
+            end
+            cb(networks)
+          end)
+        end
+      })
+    end
+    scan_timer:start()
   end)
 end
 
@@ -79,40 +192,46 @@ local function escape(str)
 end
 
 local function connect_wifi(ssid, security, cb)
-  run('nmcli --fields NAME connection', function(output)
-    local ot = parse_command(output)
-    local found = false
-    for _, v in pairs(ot) do
-      if v[1] == ssid then
-        found = true
-        break
-      end
-    end
-    if found then
-      run('nmcli connection up '..escape(ssid), function(output) end)
-    else
-      if security == "--" then
-        run('nmcli device wifi connect "'..escape(ssid)..'"', function(output)
-          cb(output)
-        end)
-      else
-        awful.prompt.run({ prompt = "Password for "..ssid..": " },
-        o.promptbox[mouse.screen.index].widget, function(password)
-          run('nmcli device wifi connect "'..escape(ssid)..'" password '..escape(password), function(output)
-            cb(output)
-          end)
-        end)
-      end
-    end
-  end)
+  local panel = mouse.screen.right_panel
+  local wifi_widget = wibox.widget({
+    layout=wibox.layout.grid,
+    homogeneous=true,
+    spacing=0,
+    min_cols_size=2,
+    min_rows_size=1,
+  })
+
+  local row = 1
+  wifi_widget:add_widget_at(wibox.widget.textbox('SSID: '), row, 1)
+  wifi_widget:add_widget_at(wibox.widget.textbox(ssid), row, 2)
+  row = row + 1
+  if security then
+    wifi_widget:add_widget_at(wibox.widget.textbox('Security: '), row, 1)
+    wifi_widget:add_widget_at(wibox.widget.textbox(security), row, 2)
+    row = row + 1
+    wifi_widget:add_widget_at(wibox.widget.textbox('Password: '), row, 1)
+    local wifi_form = form(function(self)
+      panel:toggle_visible(false)
+      self:set_active_input(nil)
+    end)
+    local password_box = form_textbox(wifi_form, 'password')
+    password_box.type = 'password'
+    wifi_form:set_active_input(password_box.widget)
+    wifi_widget:add_widget_at(password_box, row, 2)
+    row = row + 1
+  end
+
+  panel:set_content(wifi_widget)
+  panel:toggle_visible(true)
 end
 
 local function toggle_interface(iface, cb)
   get_local_interfaces(function(interfaces)
     for _, interface in pairs(interfaces) do
       if interface[1] == iface then 
-        local action = iface[2] == 'connected' and 'disconnect' or 'connect'
-        run('nmcli device '..action..' '..iface, function(output)
+        local action = interface[3] == 'connected'  and 'down' or 'up'
+        local command = 'sudo ip link set dev '..iface..' '..action
+        run(command, function(output)
           cb(output)
         end)
       end
@@ -120,27 +239,39 @@ local function toggle_interface(iface, cb)
   end)
 end
 
-local function toggle_wifi(cb)
-  run('nmcli radio wifi', function(output)
-    local action = trim(output) == 'enabled' and 'off' or 'on'
-    run('nmcli radio wifi '..action, function(output)
-      local function scan()
-        run('sleep 1', function()
-          run('nmcli device wifi rescan', function(output)
-            if output == "" then
-              cb(output)
-            else
-              scan()
-            end
-          end)
+local function disconnect_wifi(cb)
+
+end
+
+local function toggle_wifi(widget, iface, cb)
+  run('sudo rfkill -r -n', function(output)
+    local rfkill = {}
+    for line in output:gmatch("[^\r\n]+") do
+      local interface = {}
+      for str in line:gmatch("%w+") do
+        table.insert(interface, str)
+      end
+      table.insert(rfkill, interface)
+    end
+
+    for _, interface in pairs(rfkill) do
+      local index, wtype, name, softblock, hardblock = interface[1], interface[2], interface[3], interface[4] == 'blocked' and true or false, interface[5] == 'blocked' and true or false
+      if wtype == 'wlan' then
+        local action = 'block'
+        if softblock or hardblock then
+          action = 'unblock'
+        else
+          o.connected = false
+          o.signal = 0
+          o.ssid = ''
+          o.frequency = 0
+        end
+        run('sudo rfkill '..action..' '..wtype, function()
+          generate_menu(widget, cb)
         end)
+        return
       end
-      if action == "on" then
-        scan()
-      else
-        cb(output)
-      end
-    end)
+    end
   end)
 end
 
@@ -165,6 +296,7 @@ local function generate_line(lengths, fields, lt, skip_replace)
 end
 
 local function generate_wifi_line(lt, skip_replace)
+  local data = {lt.encryption, lt.ssid, lt.signal, lt.frequency}
   local line = {}
   local lengths = {
     -1,
@@ -174,13 +306,13 @@ local function generate_wifi_line(lt, skip_replace)
   }
   local fields = {
     function(v)
-      return v:match('[^-]') and '✓ ' or 'x ' 
+      return v ~= '[ESS]' and '✓ ' or 'x ' 
     end,
     true,
     false,
   }
 
-  return generate_line(lengths, fields, lt, skip_replace)
+  return generate_line(lengths, fields, data, skip_replace)
 end
 
 local function generate_iface_line(lt, skip_replace, last)
@@ -195,10 +327,10 @@ local function generate_iface_line(lt, skip_replace, last)
   }
   local fields = {
     function(v)
-      if v:match('connected') then
-        return '✓'
-      elseif v:match('disconnected') or v:match('unavailable') then
+      if v:match('disconnected') or v:match('unavailable') then
         return '✗'
+      elseif v:match('connected') then
+        return '✓'
       elseif v:match('connecting') then
         return ' ❗  '
       end
@@ -222,81 +354,71 @@ local function generate_iface_line(lt, skip_replace, last)
   return generate_line(lengths, fields, lt, skip_replace)
 end
 
-local function unique_wifi(wifi)
-  local ssids = {}
-  for _, v in pairs(wifi) do
-    local ssid = ssids[v[2]]
-    if not ssid then
-      ssids[v[2]] = v
-    elseif v[4] == "*" or (ssid[4] ~= "*" and tonumber(v[3]) > tonumber(ssid[3])) then
-      ssids[v[2]] = v
+local function generate_wifi_menu(widget, iface, networks, cb)
+  get_wifi_link(iface, function(link)
+    o.connected = link and true or false
+    if o.connected then
+      o.signal = link.signal
+      o.ssid = link.ssid
+      o.frequency = link.frequency
+    else
+      o.signal = 0
+      o.ssid = ''
+      o.frequency = 0
     end
-  end
-  local res = {}
-  for _, v in pairs(ssids) do
-    res[#res+1] = v
-  end
-  return res
-end
+    widget:set_image(icon(o.signal, 0--[[o.frequency]], o.connected, o.internet))
 
-local generate_menu
+    get_area_wifi(widget, iface, function(area_wifi)
+      local wifi_list = {}
+      table.sort(area_wifi, function(a, b) return (math.abs(a.signal) or 100) > (math.abs(b.signal) or 100) end)
 
-local function generate_wifi_menu(iface, networks, cb)
-  get_area_wifi(function(area_wifi)
-    local wifi_list = {}
-    local wificonnected = false
-    local wifisignal = 0
-    local wifissid = ''
-    local wifisecurity = nil
-    area_wifi = unique_wifi(area_wifi)
-    table.sort(area_wifi, function(a,b) return (tonumber(a[3]) or 100) > (tonumber(b[3]) or 100) end)
-    for i, lt in ipairs(area_wifi) do
-      local ssid, signal, security, in_use = lt[2], tonumber(lt[3]), lt[1], lt[4]
-      if signal then
-        if in_use == '*' then
-          wificonnected = true
-          wifisignal = signal
-          wifissid = ssid
-          wifisecurity = security
-        else
-          local work = {
-            generate_wifi_line(lt),
-            function()
-              connect_wifi(ssid, security, function()
-                generate_menu(cb)
-              end)
-            end,
-            icon(signal, true, true)
-          }
-          table.insert(wifi_list, work)
-        end
-      else
-        table.insert(wifi_list, {generate_wifi_line({'🔒 ', 'SSID', nil, nil}, true)})
+      table.insert(wifi_list, {generate_wifi_line({encryption='⚷ ', ssid='SSID'}, true)})
+      for i, lt in ipairs(area_wifi) do 
+        local work = {
+          generate_wifi_line(lt),
+          function()
+            connect_wifi(lt.ssid, lt.encryption, function()
+              generate_menu(widget, cb)
+            end)
+          end,
+          icon(math.abs(lt.signal), lt.frequency, true, true)
+        }
+        table.insert(wifi_list, work)
       end
-    end
 
-    local ud = {'Toggle Interface', function()
-      toggle_wifi(function()
-        generate_menu(cb)
-      end)
-    end}
-    table.insert(wifi_list, ud)
-    local ud = {'Rescan', function()
-      generate_menu(cb)
-    end}
-    table.insert(wifi_list, ud)
-    local face = {generate_iface_line(iface), wifi_list}
-    table.insert(networks, face)
-    o.connected = wificonnected
-    o.signal = wifisignal
-    o.ssid = wifissid
-    o.security = wifisecurity
-    cb(networks)
+      table.insert(wifi_list, {'Rescan', function()
+        generate_menu(widget, cb)
+      end})
+      table.insert(wifi_list, {'Disconnect', function()
+        disconnect_wifi(iface[1], function()
+          generate_menu(widget, cb)
+        end)
+      end})
+      table.insert(wifi_list, {'Toggle Interface', function()
+        toggle_wifi(widget, iface[1], function()
+          generate_menu(widget, cb)
+        end)
+      end})
+      local face = {generate_iface_line(iface), wifi_list}
+      local found = nil
+      for key, face1 in pairs(networks) do
+        if face1[1] == face[1] then
+          found = key
+          break
+        end
+      end
+      if found then
+        networks[found] = face
+      else
+        table.insert(networks, face)
+      end
+      cb(networks)
+    end)
   end)
 end
 
 --generate the network menu
-generate_menu = function(cb)
+generate_menu = function(widget, cb)
   get_local_interfaces(function(local_interfaces)
     local networks = {}
     --Sort by network type
@@ -316,14 +438,14 @@ generate_menu = function(cb)
         iface[5] = 'last'
       end
 
-      if iface[2] == 'wifi' then
+      if iface[2] == 'wireless' then
         -- wifi interfaces
-        generate_wifi_menu(iface, networks, cb)
+        generate_wifi_menu(widget, iface, networks, cb)
       elseif key ~= 1 then
         --any network interface that is not the header and does not have a submenu
         local face = {generate_iface_line(iface), function()
           toggle_interface(iface[1], function()
-            generate_menu(cb)
+            generate_menu(widget, cb)
           end)
         end}
         table.insert(networks, face)
@@ -334,7 +456,7 @@ generate_menu = function(cb)
 end
 
 local function menu(args, widget)
-  generate_menu(function(items)
+  generate_menu(widget, function(items)
     args.menu = awful.menu({
       theme = {
         height = beautiful.menu_height,
@@ -342,7 +464,6 @@ local function menu(args, widget)
       },
       items = items
     })
-    widget:set_image(icon(o.signal, o.connected, o.internet))
     widget:emit_signal('widget::updated')
   end)
 end
@@ -351,20 +472,39 @@ function o.widget(promptbox)
   o.promptbox = promptbox
 
   local args = {
-    image = icon(o.signal, o.connected, o.internet),
+    image = icon(o.signal, 0 --[[o.frequency]], o.connected, o.internet),
     menu = awful.menu(),
   }
 
   local widget = awful.widget.launcher(args)
   menu(args, widget)
-  local t = gears.timer({timeout = 10})
-  t:connect_signal("timeout", function() menu(args, widget) end)
-  t:start()
   awful.tooltip({
     objects={ widget },
     timer_function = function()
-      return o.ssid
+      return o.ssid..'\n'..tostring(o.frequency):sub(1, 1)..'ghz'
     end
+  })
+  gears.timer({
+    timeout=10,
+    autostart=true,
+    callback=function()
+      get_net_status(function(internet)
+        o.internet = internet
+        get_wifi_link({'wlp2s0'}, function(link)
+          o.connected = link and true or false
+          if o.connected then
+            o.signal = link.signal
+            o.ssid = link.ssid
+            o.frequency = link.frequency
+          else
+            o.signal = 0
+            o.ssid = ''
+            o.frequency = 0
+          end
+          widget:set_image(icon(o.signal, 0--[[o.frequency]], o.connected, o.internet))
+        end)
+      end)
+    end,
   })
   return widget
 end

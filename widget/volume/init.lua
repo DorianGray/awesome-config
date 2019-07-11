@@ -1,7 +1,11 @@
 local awful = require 'awful'
 local beautiful = require 'beautiful'
 local gears = require 'gears'
-local icon = require 'widget.volume.icon.volume'(32, 32)
+local theme = require 'theme'
+local icon = require 'widget.volume.icon.volume'(
+  32 * theme.scale,
+  32 * theme.scale
+)
 local widget = require 'wibox'.widget.imagebox()
 local audio = require 'widget.volume.pulseaudio':Create()
 local oldupdate = widget.Update

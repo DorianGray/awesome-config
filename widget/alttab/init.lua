@@ -304,7 +304,7 @@ local function switch(dir, alt, tab, shift_tab)
   -- if not already there.
   -- This will preserve the history AND enable you to focus on minimized clients
 
-  local t = awful.tag.selected(s)
+  local t = screen[s].selected_tag
   local all = client.get(s)
 
 
@@ -382,9 +382,15 @@ local function switch(dir, alt, tab, shift_tab)
     if key == alt or key == "Escape" and event == "release" then
       preview_wbox.visible = false
       applyOpacity = false
-      preview_live_timer:stop()
-      previewDelayTimer:stop()
-      opacityDelayTimer:stop()
+      if preview_live_timer.started then
+        preview_live_timer:stop()
+      end
+      if previewDelayTimer.started then
+        previewDelayTimer:stop()
+      end
+      if opacityDelayTimer.started then
+        opacityDelayTimer:stop()
+      end
 
       if key == "Escape" then 
         for i,c in pairs(altTabTable) do

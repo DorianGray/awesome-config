@@ -1,7 +1,6 @@
 local awful = require 'awful'
-local lain = require 'lain'
-local DIR = require 'pl.path'.dirname(debug.getinfo(1,'S').source:sub(2))
 local mouse = require 'mouse'
+local theme = require 'theme'
 
 local layouts    = require 'layouts'
 local modkey     = 'Mod4'
@@ -20,20 +19,13 @@ return function(boxes, widgets)
   awful.key({ modkey }, 'Right',  awful.tag.viewnext       ),
   awful.key({ modkey }, 'Escape', awful.tag.history.restore),
 
-  -- Non-empty tag browsing
-  awful.key({ altkey }, 'Left', function ()
-    lain.util.tag_view_nonempty(-1)
-  end),
-  awful.key({ altkey }, 'Right', function ()
-    lain.util.tag_view_nonempty(1)
-  end),
   -- Alt Tab
   awful.key({ altkey }, "Tab", function ()
-    widgets.alttab.switch(1, "Alt_L", "Tab", "ISO_Left_Tab")
+    widgets.alttab.switch(1, altkey, "Tab", "ISO_Left_Tab")
   end),
 
   awful.key({ altkey, "Shift"   }, "Tab", function ()
-    widgets.alttab.switch(-1, "Alt_L", "Tab", "ISO_Left_Tab")
+    widgets.alttab.switch(-1, altkey, "Tab", "ISO_Left_Tab")
   end),
   -- Default client focus
   awful.key({ altkey }, 'k',
@@ -71,7 +63,7 @@ return function(boxes, widgets)
 
   -- Show/Hide Wibox
   awful.key({ modkey }, 'b', function ()
-    boxes.wi[mouse.screen.index].visible = not boxes.wi[mouse.screen.index].visible
+    boxes.wi[mouse.screen].visible = not boxes.wi[mouse.screen].visible
   end),
   -- Multi Monitor
   --awful.key({}, "XF86Display", require 'xrandr'),
@@ -124,19 +116,18 @@ return function(boxes, widgets)
   awful.key({ }, "XF86PowerOff", function() widgets.power.menu:toggle({coords={x=(screen[1].geometry.width - 75),y=0}}) end),
   -- Lock screen
   awful.key({'Control', altkey}, 'l' , function ()
-    local command = 'gnome-screensaver-command -l'
-    awful.spawn.with_shell(command)
+    awful.spawn.with_shell(theme.lock_command)
   end),
 
   -- Copy to clipboard
   awful.key({ modkey }, 'c', function () os.execute('xsel -p -o | xsel -i -b') end),
 
   -- Prompt
-  awful.key({ modkey }, 'r', function () boxes.prompt[mouse.screen.index]:run() end),
+  awful.key({ modkey }, 'r', function () boxes.prompt[mouse.screen]:run() end),
   awful.key({ modkey }, 'x',
   function ()
     awful.prompt.run({ prompt = 'Run Lua code: ' },
-    boxes.prompt[mouse.screen.index].widget,
+    boxes.prompt[mouse.screen].widget,
     awful.util.eval, nil,
     awful.util.getdir('cache') .. '/history_eval')
   end))
@@ -144,9 +135,10 @@ return function(boxes, widgets)
   clientkeys = awful.util.table.join(
   awful.key({ modkey,           }, 'f',      function (c) c.fullscreen = not c.fullscreen  end),
   awful.key({ modkey, 'Shift'   }, 'c',      function (c) c:kill()                         end),
+  awful.key({ altkey,           }, 'F4',     function (c) c:kill()                         end),
   awful.key({ modkey, 'Control' }, 'space',  awful.client.floating.toggle                     ),
   awful.key({ modkey, 'Control' }, 'Return', function (c) c:swap(awful.client.getmaster()) end),
-  awful.key({ modkey,           }, 'o',      awful.client.movetoscreen                        ),
+  awful.key({ modkey,           }, 'o',      function (c) c:move_to_screen(s)              end),
   awful.key({ modkey,           }, 't',      function (c) c.ontop = not c.ontop            end),
   awful.key({ modkey,           }, 'n',
   function (c)
@@ -169,7 +161,7 @@ return function(boxes, widgets)
     -- View tag only.
     awful.key({ modkey }, '#' .. i + 9,
     function ()
-      local screen = mouse.screen.index
+      local screen = mouse.screen
       local tag = awful.tag.gettags(screen)[i]
       if tag then
         awful.tag.viewonly(tag)
@@ -178,7 +170,7 @@ return function(boxes, widgets)
     -- Toggle tag.
     awful.key({ modkey, 'Control' }, '#' .. i + 9,
     function ()
-      local screen = mouse.screen.index
+      local screen = mouse.screen
       local tag = awful.tag.gettags(screen)[i]
       if tag then
         awful.tag.viewtoggle(tag)

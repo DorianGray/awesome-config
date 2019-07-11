@@ -1,10 +1,15 @@
 theme                               = {}
 
 themes_dir                          = os.getenv("HOME") .. "/.config/awesome/theme"
+theme.scale                         = 1.5
 theme.wallpaper                     = themes_dir .. "/wall.jpg"
+theme.lock_command                  = '/usr/local/bin/lock-screen'
+theme.logout_command                = 'sudo /usr/local/bin/logout'
+theme.shutdown_command              = 'sudo openrc-shutdown -p now'
+theme.reboot_command                = 'sudo openrc-shutdown -r now'
 
-theme.font_name                     = "Inconsolata-dz for Powerline Bold"
-theme.font_size                     = "20px"
+theme.font_name                     = "Hack Bold"
+theme.font_size                     = (20 * theme.scale)..'px'
 theme.font                          = table.concat({
                                       theme.font_name,
                                       theme.font_size,
@@ -15,7 +20,7 @@ theme.fg_urgent                     = "#CC9393"
 theme.bg_normal                     = "#1A1A1A"
 theme.bg_focus                      = "#313131"
 theme.bg_urgent                     = "#1A1A1A"
-theme.border_width                  = "0"
+theme.border_width                  = 0
 theme.border_normal                 = "#3F3F3F"
 theme.border_focus                  = "#7F7F7F"
 theme.border_marked                 = theme.fg_urgent
@@ -28,11 +33,11 @@ theme.textbox_widget_margin_top     = 1
 theme.notify_fg                     = theme.fg_normal
 theme.notify_bg                     = theme.bg_normal
 theme.notify_border                 = theme.border_focus
-theme.awful_widget_height           = 28
+theme.awful_widget_height           = 28 * theme.scale
 theme.awful_widget_margin_top       = 2
 theme.mouse_finder_color            = "#CC9393"
-theme.menu_height                   = 32
-theme.menu_width                    = 280
+theme.menu_height                   = 32 * theme.scale
+theme.menu_width                    = 280 * theme.scale
 
 theme.submenu_icon                  = themes_dir .. "/icons/submenu.png"
 theme.taglist_squares_sel           = themes_dir .. "/icons/square_sel.png"

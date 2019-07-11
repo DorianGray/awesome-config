@@ -21,12 +21,12 @@ local function round(num, idp)
   return tonumber(string.format('%.' .. (idp or 0) .. 'f', num))
 end
 
-local function acpi_is_on_ac_power(adapter)
-  local f = io.open('/sys/class/power_supply/' .. adapter .. '/online')
+local function acpi_is_on_ac_power(battery)
+  local f = io.open('/sys/class/power_supply/' .. battery .. '/status')
   if f == nil then return false end
   local o = f:read()
   f:close()
-  return string.find(o, '1')
+  return not o:match('Discharging')
 end
 
 local function acpi_battery_is_present(battery)
@@ -58,14 +58,14 @@ local function acpi_battery_percent(battery)
   return tonumber(out_n)/tonumber(out_f)
 end
 
-local function acpi_battery_runtime(battery)
-  local output = io.popen('acpi'):read()
-  if not output then
-    return 'No Battery Found'
-  end
-  local _, _, state, percent, time = output:find('Battery %d+: (%a*), (%d*)%%,? ?(%S*)')
-  
-  return 'State: '..state..'\r\nCapacity: '..percent..'%'..(time ~= '' and '\r\nRemaining: '..time or '')
+local function acpi_battery_runtime(battery, cb)
+  awful.spawn.easy_async('acpi', function(output)
+    if not output then
+      return cb('No Battery Found')
+    end
+    local _, _, state, percent, time = output:find('Battery %d+: (%a*), (%d*)%%,? ?(%S*)')
+    return cb('State: '..state..'\r\nCapacity: '..percent..'%'..(time ~= '' and '\r\nRemaining: '..time or ''))
+  end)
 end
 
 local function battery_bolt_generate(width, height)
@@ -127,7 +127,7 @@ local function battery_fill_generate(width, height, percent)
 end
 
 local properties = {
-  'battery', 'adapter', 'width', 'height', 'peg_top',
+  'battery', 'width', 'height', 'peg_top',
   'peg_height', 'peg_width', 'stroke_width',
   'font', 'critical_level',
   'normal_color', 'charging_color', 'critical_color'
@@ -162,7 +162,7 @@ function o.draw(o, wibox, cr, width, height)
   cr:translate(data[o].stroke_width, data[o].stroke_width)
   cr:append_path(battery_fill_generate(data[o].width, data[o].height, percent))
 
-  if acpi_is_on_ac_power(data[o].adapter) then
+  if acpi_is_on_ac_power(data[o].battery) then
     local bolt_x = (data[o].width  / 2.0) - (data[o].bolt_width  / 2.0)
     local bolt_y = (data[o].height / 2.0) - (data[o].bolt_height / 2.0)
     cr:translate( bolt_x,  bolt_y)
@@ -174,7 +174,7 @@ function o.draw(o, wibox, cr, width, height)
 end
 
 -- Build properties function
-for _, prop in ipairs(properties) do
+for _, prop in pairs(properties) do
   if not o['set_' .. prop] then
     o['set_' .. prop] = function(widget, value)
       data[widget][prop] = value
@@ -188,7 +188,6 @@ end
 function o.new(args)
   local args = args or {}
   local battery = args.battery or 'BAT0'
-  local adapter = args.adapter or 'AC'
   local stroke_width = args.stroke_width or 2
   local width = args.width or 36
   local height = args.height or 15
@@ -214,7 +213,6 @@ function o.new(args)
 
   data[widget] = {
     battery = battery,
-    adapter = adapter,
     width = width,
     height = height,
     bolt_width = bolt_width,
@@ -227,20 +225,23 @@ function o.new(args)
     critical_level = critical_level,
     normal_color = normal_color,
     critical_color = critical_color,
-    charging_color = charging_color
+    charging_color = charging_color,
   }
 
   -- Set methods
-  for _, prop in ipairs(properties) do
+  for _, prop in pairs(properties) do
     widget['set_' .. prop] = o['set_' .. prop]
   end
 
   widget.draw = o.draw
   widget.fit = o.fit
-  awful.tooltip({
+  local battery_tooltip
+  battery_tooltip = awful.tooltip({
     objects={ widget },
     timer_function = function()
-      return acpi_battery_runtime('BAT0')
+      acpi_battery_runtime(data[widget].battery, function(text)
+        battery_tooltip.text = text
+      end)
     end
   })
   return widget
