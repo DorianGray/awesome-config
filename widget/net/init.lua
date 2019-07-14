@@ -14,6 +14,7 @@ local form = require 'widget.form'
 local form_textbox = require 'widget.form.textbox'
 
 local o = {
+  ssid = '',
   connected = false,
   signal = 0,
   frequency = 0,
@@ -77,9 +78,21 @@ local NET_STATUS = {
   DOWN='disconnected',
 }
 
-local function parse_ip_link(output, iw_output)
+local function parse_proc_net_wireless(output)
+  local interfaces = {}
+  for line in output:gmatch('([^\n]+)') do
+    if not line:match('|') then
+      local _, _, iface, status, link, level, noise  = line:find('^([^:]+):%s+(%d+)%s+(%d+)%.%s+-(%d+)%.%s+-(%d+)')
+      interfaces[iface] = {status=status, link=link, level=level, noise=noise}
+    end
+  end
+  return interfaces
+end
+
+local function parse_ip_link(output, cat_output)
   local sep = '\n'
   local groups = {{'INTERFACE', 'TYPE', 'STATUS', ''}}
+  local wireless = parse_proc_net_wireless(cat_output)
 
   local function add_group(group)
     str = table.concat(group, sep)
@@ -88,7 +101,7 @@ local function parse_ip_link(output, iw_output)
     if iftype:match('LOOPBACK') then
       iftype = 'loopback'
       ifstatus = NET_STATUS['UP']
-    elseif iw_output:match(ifname) then
+    elseif wireless[ifname] then
       iftype = 'wireless'
     elseif iftype:match('BROADCAST,MULTICAST') then
       iftype = 'ethernet'
@@ -115,23 +128,29 @@ end
 --Make a table of the local interfaces
 local function get_local_interfaces(cb)
   run('ip link', function(output)
-    run('iw dev', function(iw_output)
-      cb(parse_ip_link(output, iw_output))
+    run('cat /proc/net/wireless', function(cat_output)
+      cb(parse_ip_link(output, cat_output))
     end)
   end)
 end
 
 local function get_wifi_link(iface, cb)
-  run('iw dev '..iface[1]..' link', function(iw_output)
-    local _, _, ssid = iw_output:find('\n%s+SSID:%s*([^\n]*)\n')
-    if ssid then
-      local _, _, signal = iw_output:find('\n%s+signal:%s+-([^\n]+)%sdBm\n')
-      local _, _, frequency = iw_output:find('\n%s+freq:%s*([^\n]*)\n')
-      run('wpa_cli status', function(wpa_output)
-        return cb({ssid=ssid, signal=tonumber(signal), frequency=tonumber(frequency),})
-      end)
-    end
-    return cb(nil)
+  run('cat /proc/net/wireless', function(cat_output)
+    local wireless = parse_proc_net_wireless(cat_output)
+    run('wpa_cli status', function(wpa_output)
+      local info = {}
+      for line in wpa_output:gmatch('([^\n]+)') do
+        local _, _, key, value = line:find('^([^=]*)=([^=]*)$')
+        if key then
+          info[key] = value
+        end
+      end
+      return cb({
+        ssid=info.ssid,
+        signal=tonumber(wireless[iface[1]].level),
+        frequency=tonumber(info.freq),
+      })
+    end)
   end)
 end
 
@@ -481,7 +500,11 @@ function o.widget(promptbox)
   awful.tooltip({
     objects={ widget },
     timer_function = function()
-      return o.ssid..'\n'..tostring(o.frequency):sub(1, 1)..'ghz'
+      if o.ssid then
+        return o.ssid..'\n'..tostring(o.frequency):sub(1, 1)..'ghz'
+      else
+        return 'Not Connected'
+      end
     end
   })
   gears.timer({
