@@ -28,34 +28,12 @@ local function run(command, callback)
   return awful.spawn.easy_async_with_shell(command, callback)
 end
 
-local function trim(s)
-  return (s:gsub("^%s*(.-)%s*$", "%1"))
-end
-
-local function parse_command(input)
-  local sep = '\n'
-  local t = {};
-  local first = true
-  local keys = {}
-  for str in string.gmatch(input, '([^'..sep..']+)') do
-    if first then
-      first = false
-      local start, finish = str:find('[%S]+', finish)
-      local _, finish = str:find('%s+', finish)
-      while start do
-        keys[#keys+1] = {start, finish}
-        start, finish = str:find('[%S]+', finish)
-        _, finish = str:find('%s+', finish)
-      end
-    end
-
-    local result = {}
-    for _, key in pairs(keys) do
-      result[#result+1] = trim(str:sub(unpack(key)))
-    end
-    t[#t+1] = result
-  end
-  return t
+local function read_file(file)
+  local f = io.open(file, "rb")
+  if f == nil then return false end
+  local o = f:read("*all")
+  f:close()
+  return o
 end
 
 local function get_net_status(cb)
@@ -128,29 +106,25 @@ end
 --Make a table of the local interfaces
 local function get_local_interfaces(cb)
   run('ip link', function(output)
-    run('cat /proc/net/wireless', function(cat_output)
-      cb(parse_ip_link(output, cat_output))
-    end)
+    cb(parse_ip_link(output, read_file('/proc/net/wireless')))
   end)
 end
 
 local function get_wifi_link(iface, cb)
-  run('cat /proc/net/wireless', function(cat_output)
-    local wireless = parse_proc_net_wireless(cat_output)
-    run('wpa_cli status', function(wpa_output)
-      local info = {}
-      for line in wpa_output:gmatch('([^\n]+)') do
-        local _, _, key, value = line:find('^([^=]*)=([^=]*)$')
-        if key then
-          info[key] = value
-        end
+  local wireless = parse_proc_net_wireless(read_file('/proc/net/wireless'))
+  run('wpa_cli status', function(wpa_output)
+    local info = {}
+    for line in wpa_output:gmatch('([^\n]+)') do
+      local _, _, key, value = line:find('^([^=]*)=([^=]*)$')
+      if key then
+        info[key] = value
       end
-      return cb({
-        ssid=info.ssid,
-        signal=tonumber(wireless[iface[1]].level),
-        frequency=tonumber(info.freq),
-      })
-    end)
+    end
+    return cb({
+      ssid=info.ssid,
+      signal=tonumber(wireless[iface[1]].level),
+      frequency=tonumber(info.freq),
+    })
   end)
 end
 
@@ -204,10 +178,6 @@ local function get_area_wifi(widget, iface, cb)
     end
     scan_timer:start()
   end)
-end
-
-local function escape(str)
-  return str:gsub('%(', '\\('):gsub('%)', '\\)')
 end
 
 local function connect_wifi(ssid, security, cb)

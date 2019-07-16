@@ -44,19 +44,4 @@ awful.rules.rules = {
       height = screen[s].workarea.height,
     })
   end},
-
-  {rule = {class = 'discord', class = 'discord'},
-  callback = function(c)
-    local s, t = 1, 2
-    if screen.count() >= 2 then
-      s, t = 2, 1
-    end
-    c:tags({tags[s][t]})
-
-    c:geometry({
-      width = screen[s].workarea.width,
-      height = screen[s].workarea.height,
-    })
-  end},
-
 }

@@ -11,12 +11,13 @@ local function run_once(cmd, match)
     end
   end
   awful.spawn.with_shell(
-    '! pgrep -u $USER -x ' .. match .. ' > /dev/null && ' .. cmd
+    '! pgrep -u $USER -x ' .. match .. ' > /dev/null && exec ' .. cmd
   )
 end
 
 local autorunApps = { 
   ['google-chrome-stable'] = {cmd=table.concat({
+    --'--enable-vulkan',
     '--process-per-site',
     '--high-dpi-support=1',
     '--force-device-scale-factor=2',
@@ -29,7 +30,6 @@ local autorunApps = {
     '-e '..os.getenv('HOME')..'/.config/awesome/tmux-session.sh awesome',
   }, ' ')},
   ['udiskie'] = {},
-  ['discord'] = {match='Discord'},
   ['pulseaudio'] = {cmd='-D'},
   ['unclutter'] = {cmd='-root'},
   ['xautolock'] = {cmd=table.concat({

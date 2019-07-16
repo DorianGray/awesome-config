@@ -11,7 +11,7 @@ TMUX_SESSION="${1:-awesome}"
 
 if ! (${TMUX} ${TMUX_ARGS} has-session -t "${TMUX_SESSION}" 2> /dev/null); then
   ${TMUX} ${TMUX_ARGS} new -d -s "${TMUX_SESSION}"
-  sleep 0.1
+  sleep 0.5
   ${TMUX} ${TMUX_ARGS} run-shell -b -t "$TMUX_SESSION" "${TMUX_PLUGINS}/tmux-resurrect/scripts/restore.sh"
 fi
 
