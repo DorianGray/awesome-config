@@ -1,13 +1,13 @@
 local awful = require 'awful'
 local wibox = require 'wibox'
-local theme = require 'theme'
+local beautiful = require 'beautiful'
 
 
 return function(screen, side)
   if side == nil then side = 'right' end
 
-  local width = screen.geometry.width * (0.1333333 * theme.scale)
-  local height = screen.geometry.height - (32 * theme.scale)
+  local width = screen.geometry.width * (0.1333333 * beautiful.scale)
+  local height = screen.geometry.height - (32 * beautiful.scale)
 
   local o = {
     side = side,
@@ -18,8 +18,8 @@ return function(screen, side)
       width=width,
       height=height,
       screen=screen,
-      bg=theme.bg_focus,
-      fg=theme.fg_normal,
+      bg=beautiful.bg_focus,
+      fg=beautiful.fg_normal,
       visible=false,
     })
   }
@@ -34,7 +34,7 @@ return function(screen, side)
       forced_height=self.panel.height,
     })
     local close_button = wibox.widget.textbox(
-    '<span font="'..(32 * theme.scale)..'" weight="bold"> '..(o.side == 'left' and '❮' or '❯')..'</span>'
+    '<span font="'..(32 * beautiful.scale)..'" weight="bold"> '..(o.side == 'left' and '❮' or '❯')..'</span>'
     )
     close_button:buttons(awful.button({}, 1, function()
       self:toggle_visible()
@@ -54,10 +54,10 @@ return function(screen, side)
     close_button:set_align("center")
     close_button:set_valign("center")
     close_button.forced_height = self.panel.height
-    close_button.forced_width = 32 * theme.scale
+    close_button.forced_width = 32 * beautiful.scale
     self.panel.widget = panel_close_layout
     self.panel.widget:add_widget_at(
-      wibox.container.background(close_button, theme.bg_normal),
+      wibox.container.background(close_button, beautiful.bg_normal),
       1,
       self.side == 'left' and 2 or 1
     )

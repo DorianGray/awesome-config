@@ -1,52 +1,22 @@
-local os = require 'os'
-local gears     = require 'gears'
-local awful     = require 'awful'
-awful.rules     = require 'awful.rules'
-require 'awful.autofocus'
-local wibox     = require 'wibox'
-local beautiful = require 'beautiful'
-local naughty   = require 'naughty'
-local layouts   = require 'layouts'
-local theme     = require 'theme'
-
 -- Add local luarocks repo to package.path
 package.path = os.getenv('HOME')..'/.luarocks/share/lua/5.1/?.lua;'..os.getenv('HOME')..'/.luarocks/share/lua/5.1/?/init.lua;'..package.path
 package.cpath = os.getenv('HOME')..'/.luarocks/lib/lua/5.1/?.so;'..os.getenv('HOME')..'/.luarocks/lib/lua/5.1/?/init.so;'..package.cpath
 
+local os = require 'os'
 
--- Error handling
-if awesome.startup_errors then
-  naughty.notify({
-    preset = naughty.config.presets.critical,
-    title = 'Oops, there were errors during startup!',
-    text = awesome.startup_errors,
-  })
-end
+require 'error_handler'
 
-local in_error = false
-awesome.connect_signal('debug::error', function (err)
-  if in_error then return end
-  in_error = true
-
-  naughty.notify({
-    preset = naughty.config.presets.critical,
-    title = 'Oops, an error occurred!',
-    text = debug.traceback(err),
-  })
-  in_error = false
-end)
+local config = require 'config'
+local beautiful = require 'beautiful'
+local gears = require 'gears'
+local awful = require 'awful'
+local wibox = require 'wibox'
+local layouts = require 'layouts'
 
 -- beautiful init
-beautiful.init(os.getenv('HOME') .. '/.config/awesome/theme/init.lua')
+local theme = require('theme.' .. config.theme)
+beautiful.init(theme)
 
--- Wallpaper
-if beautiful.wallpaper then
-  for s = 1, screen.count() do
-    gears.wallpaper.maximized(beautiful.wallpaper, s, true)
-  end
-end
-
-local widgets = {}
 local icons = {}
 local boxes = {
   wi = {},
@@ -55,11 +25,12 @@ local boxes = {
 }
 local taglist = {}
 
+local widgets = {}
 -- Textclock
 widgets.clock = wibox.widget.textclock('%H:%M')
 -- calendar
 widgets.calendar = awful.widget.calendar_popup.month({
-  font=theme.font_name..' '..theme.font_size,
+  font=beautiful.font,
   start_sunday=true,
 })
 widgets.calendar:attach(widgets.clock, "tr")
@@ -78,14 +49,14 @@ widgets.alttab.settings.client_opacity_delay = 150
 
 -- Battery
 widgets.battery = require 'widget.battery'({
-  width = 30 * theme.scale,
-  height = 10 * theme.scale,
-  bolt_width = 30 * theme.scale,
-  bolt_height = 15 * theme.scale,
-  stroke_width = 2 * theme.scale,
-  peg_top = 4 * theme.scale,
-  peg_height = 6 * theme.scale,
-  peg_width = 4 * theme.scale,
+  width = 30 * beautiful.scale,
+  height = 10 * beautiful.scale,
+  bolt_width = 30 * beautiful.scale,
+  bolt_height = 15 * beautiful.scale,
+  stroke_width = 2 * beautiful.scale,
+  peg_top = 4 * beautiful.scale,
+  peg_height = 6 * beautiful.scale,
+  peg_width = 4 * beautiful.scale,
   font = beautiful.font,
   critical_level = 0.10,
   normal_color = beautiful.fg_normal,
@@ -97,7 +68,7 @@ widgets.battery = require 'widget.battery'({
 widgets.volume = require 'widget.volume'
 
 -- Net
-widgets.network = require 'widget.net'.widget(boxes.prompt)
+widgets.network = require 'widget.net'(boxes.prompt).widget
 
 -- Power
 widgets.power = require 'widget.power'
@@ -107,6 +78,7 @@ widgets.display = require 'widget.display'
 
 require 'layout'(widgets, icons, boxes, taglist)
 require 'keybindings'(boxes, widgets)
-require 'rules'
+awful.rules.rules = require 'rules'
+require 'awful.autofocus'
 require 'signals'
-require 'autorun'
+require 'autorun'()

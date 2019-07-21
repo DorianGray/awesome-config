@@ -1,17 +1,18 @@
 local awful = require 'awful'
 local mouse = require 'mouse'
-local theme = require 'theme'
+local beautiful = require 'beautiful'
+local root = require 'root'
+local layouts = require 'layouts'
 
-local layouts    = require 'layouts'
-local modkey     = 'Mod4'
-local altkey     = 'Mod1'
+local modkey = 'Mod4'
+local altkey = 'Mod1'
 
 return function(boxes, widgets)
   -- Key bindings
   local globalkeys = awful.util.table.join(
 
   awful.key({ }, "Print", function ()
-      awful.util.spawn_with_shell("sleep 0.5 && scrot -s")
+      awful.spawn.with_shell("sleep 0.5 && scrot -s")
   end), 
 
   -- Tag browsing
@@ -115,12 +116,7 @@ return function(boxes, widgets)
 
   awful.key({ }, "XF86PowerOff", function() widgets.power.menu:toggle({coords={x=(screen[1].geometry.width - 75),y=0}}) end),
   -- Lock screen
-  awful.key({'Control', altkey}, 'l' , function ()
-    awful.spawn.with_shell(theme.lock_command)
-  end),
-
-  -- Copy to clipboard
-  awful.key({ modkey }, 'c', function () os.execute('xsel -p -o | xsel -i -b') end),
+  awful.key({'Control', altkey}, 'l' , beautiful.command.lock),
 
   -- Prompt
   awful.key({ modkey }, 'r', function () boxes.prompt[mouse.screen]:run() end),

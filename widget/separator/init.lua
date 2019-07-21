@@ -4,8 +4,8 @@ local gears     = require("gears")
 
 local separators = {}
 
-local height = beautiful.awful_widget_height or 0
-local width  = beautiful.separators_width or 9
+local height = beautiful.taskbar_height or 32
+local width  = (beautiful.taskbar_height or 32) / 4
 
 function separators.arrow_right(col1, col2)
     local widget = wibox.widget.base.make_widget()

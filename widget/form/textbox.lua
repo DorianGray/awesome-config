@@ -1,7 +1,7 @@
 local wibox = require 'wibox'
 local gears = require 'gears'
-local theme = require 'theme'
 local awful = require 'awful'
+local beautiful = require 'beautiful'
 
 local CURSOR_CHARACTER = '█'
 local PASSWORD_CHARACTER = '•'
@@ -13,14 +13,14 @@ return function(form, name, default)
   t._accepts_input = true
   local c = wibox.container.background(
     t,
-    theme.bg_normal,
+    beautiful.bg_normal,
     function(cr, width, height)
       return gears.shape.rounded_rect(cr, width, height, 4)
     end
   )
-  c.fg = theme.fg_normal
-  c.shape_border_color = theme.fg_focus
-  c.shape_border_width = 1 * theme.scale
+  c.fg = beautiful.fg_normal
+  c.shape_border_color = beautiful.fg_focus
+  c.shape_border_width = 1 * beautiful.scale
   c.shape_clip = 0
   c.forced_width = 250
   c.forced_height = 40
@@ -80,7 +80,7 @@ return function(form, name, default)
   end
 
   function t:activate() 
-    c.shape_border_color = theme.fg_urgent
+    c.shape_border_color = beautiful.fg_urgent
     cursor_set = false
     self.text = active_text()
     if not cursor_timer.started then
@@ -89,7 +89,7 @@ return function(form, name, default)
   end
 
   function t:deactivate()
-    c.shape_border_color = theme.fg_focus
+    c.shape_border_color = beautiful.fg_focus
     cursor_set = true
     self.text = active_text()
     if cursor_timer.started then

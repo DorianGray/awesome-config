@@ -1,20 +1,19 @@
 local awful = require 'awful'
-local theme = require 'theme'
+local beautiful = require 'beautiful'
 local icon = require 'widget.power.icon.power'(
-  32 * theme.scale,
-  32 * theme.scale
+  32 * beautiful.scale,
+  32 * beautiful.scale
 )
 local beautiful = require 'beautiful'
-local theme = require 'theme'
 
 local args = {
   image = icon(),
   menu = awful.menu({
     items = {
-      {'Lock', theme.lock_command},
-      {'Log Off', theme.logout_command},
-      {'Shutdown', theme.shutdown_command},
-      {'Restart', theme.reboot_command},
+      {'Lock', beautiful.command.lock},
+      {'Log Off', beautiful.command.logout},
+      {'Shutdown', beautiful.command.shutdown},
+      {'Restart', beautiful.command.reboot},
     },
     theme = {
       width = beautiful.menu_width,

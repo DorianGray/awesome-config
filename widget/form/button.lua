@@ -1,7 +1,7 @@
 local wibox = require 'wibox'
 local gears = require 'gears'
-local theme = require 'theme'
 local awful = require 'awful'
+local beautiful = require 'beautiful'
 
 local cursor_character = '█'
 
@@ -11,14 +11,14 @@ return function(form, text)
   t._accepts_input = true
   local c = wibox.container.background(
     t,
-    theme.bg_normal,
+    beautiful.bg_normal,
     function(cr, width, height)
       return gears.shape.rounded_rect(cr, width, height, 4)
     end
   )
-  c.fg = theme.fg_normal
-  c.shape_border_color = theme.fg_urgent
-  c.shape_border_width = 1 * theme.scale
+  c.fg = beautiful.fg_normal
+  c.shape_border_color = beautiful.fg_urgent
+  c.shape_border_width = 1 * beautiful.scale
   c.shape_clip = 0
   c.forced_width = 250
   c.forced_height = 40

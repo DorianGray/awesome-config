@@ -2,8 +2,8 @@ local awesome = require 'awesome'
 local awful = require 'awful'
 local naughty = require 'naughty'
 local xrandr = require 'xrandr'
-local theme = require 'theme'
 local gears = require 'gears'
+local beautiful = require 'beautiful'
 
 
 local function arrange(out)
@@ -58,6 +58,7 @@ local function menu(cb)
         else
           table.insert(cmd, table.concat(out_cmd, ' '))
         end
+        table.insert(cmd, '--auto')
       end
       -- Disabled outputs
       for i, o in pairs(out) do
@@ -79,7 +80,6 @@ local function menu(cb)
         label,
         table.concat(cmd, ' '),
       })
-      print(table.concat(cmd, ' '))
     end
     return cb(menu)
   end)
@@ -115,7 +115,7 @@ return function()
       icon = icon,
       timeout = 4,
       screen = mouse.screen.index, -- Important, not all screens may be visible
-      font = theme.font,
+      font = beautiful.font,
       replaces_id = state.cid,
     }).id
 

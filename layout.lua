@@ -3,7 +3,6 @@ local beautiful = require 'beautiful'
 local awful = require 'awful'
 local separator = require 'widget.separator'
 local layouts  = require 'layouts'
-local theme = require 'theme'
 local screen = require 'screen'
 local form = require 'widget.form'
 local form_textbox = require 'widget.form.textbox'
@@ -50,7 +49,7 @@ return function(widgets, icons, boxes, taglist)
       instance:hide()
       instance = nil
     else
-      instance = awful.menu.clients({ width=250 * theme.scale })
+      instance = awful.menu.clients({width=250 * beautiful.scale})
     end
   end),
   awful.button({ }, 4, function ()
@@ -79,10 +78,14 @@ return function(widgets, icons, boxes, taglist)
     taglist[s] = awful.widget.taglist(s, awful.widget.taglist.filter.all, taglist.buttons)
 
     -- Create a tasklist widget
-    tasklists[s] = awful.widget.tasklist(s, awful.widget.tasklist.filter.currenttags, tasklists.buttons)
+    tasklists[s] = awful.widget.tasklist({
+      screen = s,
+      filter = awful.widget.tasklist.filter.currenttags,
+      buttons = tasklists.buttons,
+    })
 
     -- Create the wibox
-    boxes.wi[s] = awful.wibar({ position = 'top', screen = s, height = 32 * theme.scale })
+    boxes.wi[s] = awful.wibar({ position = 'top', screen = s, height = 32 * beautiful.scale})
 
     -- Widgets that are aligned to the upper left
     local left_layout = wibox.layout.fixed.horizontal()
@@ -96,7 +99,7 @@ return function(widgets, icons, boxes, taglist)
     -- Widgets that are aligned to the upper right
     local right_layout = wibox.layout.fixed.horizontal()
     local right_layout_toggle = true
-    local function right_layout_add (...)
+    local function right_layout_add(...)
       local arg = {...}
       if right_layout_toggle then
         right_layout:add(arrl_ld)
