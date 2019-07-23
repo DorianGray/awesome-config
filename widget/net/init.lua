@@ -420,7 +420,7 @@ function net:menu()
   self.rendering = false
 end
 
-return function(promptbox)
+return function()
   local self = setmetatable({}, net)
   self.rendering = false
   self.ssid = ''
@@ -431,7 +431,6 @@ return function(promptbox)
   self.internet = true
   self.networks = {}
   self.wireless = {}
-  self.promptbox = promptbox
 
   self.args = {
     image = icon(self.signal, 0 --[[self.frequency]], self.connected, self.internet),

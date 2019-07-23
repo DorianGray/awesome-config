@@ -73,7 +73,7 @@ local theme = {
 
 -- Wallpaper
 if theme.wallpaper then
-  for s = 1, screen.count() do
+  for s in screen do
     gears.wallpaper.maximized(theme.wallpaper, s, true)
   end
 end

@@ -11,15 +11,8 @@ local client = client
 awful.client = require('awful.client')
 local timer = gears.timer
 local naughty = require("naughty")
-local string = string
-local tostring = tostring
-local tonumber = tonumber
-local debug = debug
-local pairs = pairs
 
-module("alttab")
-
-local surface = cairo.ImageSurface(cairo.Format.RGB24,20,20)
+local surface = cairo.ImageSurface(cairo.Format.RGB24, 20, 20)
 local cr = cairo.Context(surface)
 
 -- settings
@@ -441,4 +434,13 @@ local function switch(dir, alt, tab, shift_tab)
 
 end -- function altTab
 
-return {switch = switch, settings = settings}
+local altkey = 'Mod1'
+return {
+  switch = switch,
+  settings = settings,
+  keys = {
+    awful.key({altkey}, "Tab", function ()
+      switch(1, altkey, "Tab", "ISO_Left_Tab")
+    end),
+  },
+}

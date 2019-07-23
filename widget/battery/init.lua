@@ -4,6 +4,7 @@ local color = require 'gears.color'
 local beautiful = require 'beautiful'
 local lgi = require 'lgi'
 local gears = require 'gears'
+local util = require 'util'
 
 local o = { mt = {} }
 
@@ -22,50 +23,36 @@ local function round(num, idp)
 end
 
 local function acpi_is_on_ac_power(battery)
-  local f = io.open('/sys/class/power_supply/' .. battery .. '/status')
-  if f == nil then return false end
-  local o = f:read()
-  f:close()
-  return not o:match('Discharging')
+  local o = util.read_file('/sys/class/power_supply/' .. battery .. '/status')
+  return not string.match(o, 'Discharging')
 end
 
 local function acpi_battery_is_present(battery)
-  local f = io.open('/sys/class/power_supply/' .. battery .. '/present')
-  if f == nil then return false end
-  local o = f:read()
-  f:close()
+  local o = util.read_file('/sys/class/power_supply/' .. battery .. '/present')
   return string.find(o, '1')
 end
 
 local function acpi_battery_is_charging(battery)
-  local f = io.open('/sys/class/power_supply/' .. battery .. '/status')
-  if f == nil then return false end
-  local o = f:read()
-  f:close()
+  local o = util.read_file('/sys/class/power_supply/' .. battery .. '/status')
   return string.find(o, 'Charging')
 end
 
 local function acpi_battery_percent(battery)
-  local now  = io.open('/sys/class/power_supply/' .. battery .. '/energy_now') or
-         io.open('/sys/class/power_supply/' .. battery .. '/charge_now')
-  local full = io.open('/sys/class/power_supply/' .. battery .. '/energy_full') or
-         io.open('/sys/class/power_supply/' .. battery .. '/charge_full')
+  local now  = util.read_file('/sys/class/power_supply/' .. battery .. '/energy_now') or
+         util.read_file('/sys/class/power_supply/' .. battery .. '/charge_now')
+  local full = util.read_file('/sys/class/power_supply/' .. battery .. '/energy_full') or
+         util.read_file('/sys/class/power_supply/' .. battery .. '/charge_full')
   if (now == nil) or (full == nil) then return 0 end
-  local out_n = now:read()
-  now:close()
-  local out_f = full:read()
-  full:close()
-  return tonumber(out_n)/tonumber(out_f)
+  return tonumber(now)/tonumber(full)
 end
 
-local function acpi_battery_runtime(battery, cb)
-  awful.spawn.easy_async('acpi', function(output)
-    if not output then
-      return cb('No Battery Found')
-    end
-    local _, _, state, percent, time = output:find('Battery %d+: (%a*), (%d*)%%,? ?(%S*)')
-    return cb('State: '..state..'\r\nCapacity: '..percent..'%'..(time ~= '' and '\r\nRemaining: '..time or ''))
-  end)
+local function acpi_battery_runtime(battery)
+  local output = util.run('acpi')
+  if not output then
+    return 'No Battery Found'
+  end
+  local _, _, state, percent, time = output:find('Battery %d+: (%a*), (%d*)%%,? ?(%S*)')
+  return 'State: '..state..'\r\nCapacity: '..percent..'%'..(time ~= '' and '\r\nRemaining: '..time or '')
 end
 
 local function battery_bolt_generate(width, height)
@@ -207,9 +194,9 @@ function o.new(args)
 
   local widget = base.make_widget()
 
-  local t = gears.timer({timeout = update_frequency})
+  --[[local t = gears.timer({timeout = update_frequency})
   t:connect_signal("timeout", function() widget:emit_signal("widget::updated") end)
-  t:start()
+  t:start()]]
 
   data[widget] = {
     battery = battery,
@@ -237,11 +224,9 @@ function o.new(args)
   widget.fit = o.fit
   local battery_tooltip
   battery_tooltip = awful.tooltip({
-    objects={ widget },
+    objects={widget},
     timer_function = function()
-      acpi_battery_runtime(data[widget].battery, function(text)
-        battery_tooltip.text = text
-      end)
+      battery_tooltip.text = acpi_battery_runtime(data[widget].battery)
     end
   })
   return widget

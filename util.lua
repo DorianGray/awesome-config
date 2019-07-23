@@ -10,7 +10,7 @@ local function script_path()
    return str:match("(.*/)")
 end
 
-local function read_stream(st)
+local function read_lines(st)
   local stream = lgi.Gio.DataInputStream.new(st)
   local output = {}
   while not stream:is_closed() do
@@ -24,12 +24,28 @@ local function read_stream(st)
   return table.concat(output, '\n')
 end
 
-local function read_file_stream(f)
-  return read_stream(f:async_read())
+local function read_bytes(st, buffer_size)
+  if not buffer_size then
+    buffer_size = 1024
+  end
+  local output = {}
+  while not st:is_closed() do
+    local buf = st:async_read_bytes(1024)
+    if buf:get_size() > 0 then
+      table.insert(output, buf.data)
+    else
+      st:async_close()
+    end
+  end
+  return table.concat(output)
 end
 
-local function read_unix_stream(f)
-  return read_stream(lgi.Gio.UnixInputStream.new(f, true))
+local function read_file_stream(f)
+  return read_bytes(f:async_read())
+end
+
+local function read_unix_stream(f, use_bytes)
+  return read_bytes(lgi.Gio.UnixInputStream.new(f, true))
 end
 
 local function read_file(file)
@@ -60,8 +76,19 @@ local function run(command, shell)
   return lgi.Gio.Async.call(gears.protected_call)(read_unix_stream, stdout)
 end
 
+local function table_values(t)
+  local values = {}
+  for _, v in pairs(t) do
+    table.insert(values, v)
+  end
+  return values
+end
+
 return {
   script_path = script_path,
   run = run,
   read_file = read_file,
+  table = {
+    values = table_values,
+  },
 }

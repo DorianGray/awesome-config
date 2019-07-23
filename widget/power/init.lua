@@ -24,4 +24,7 @@ local args = {
 
 local widget = awful.widget.launcher(args)
 widget.menu = args.menu
+widget.keys = {
+  awful.key({ }, "XF86PowerOff", function() args.menu:toggle({coords={x=(mouse.screen.geometry.width - 75),y=0}}) end),
+}
 return widget

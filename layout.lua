@@ -2,29 +2,18 @@ local wibox = require 'wibox'
 local beautiful = require 'beautiful'
 local awful = require 'awful'
 local separator = require 'widget.separator'
-local layouts  = require 'layouts'
 local screen = require 'screen'
 local form = require 'widget.form'
 local form_textbox = require 'widget.form.textbox'
 local slideout_panel = require 'widget.slideout_panel'
 
 
-return function(widgets, icons, boxes, taglist)
+return function(widgets, icons, boxes)
   -- Wibox
   -- Separators
   local spr = wibox.widget.textbox(' ')
   local arrl_dl = separator.arrow_left(beautiful.bg_focus, 'alpha')
   local arrl_ld = separator.arrow_left('alpha', beautiful.bg_focus)
-
-  -- Create a wibox for each screen and add it
-  taglist.buttons = awful.util.table.join(
-  awful.button({ }, 1, awful.tag.viewonly),
-  awful.button({ 'Mod4' }, 1, awful.client.movetotag),
-  awful.button({ }, 3, awful.tag.viewtoggle),
-  awful.button({ 'Mod4' }, 3, awful.client.toggletag),
-  awful.button({ }, 4, function(t) awful.tag.viewnext(awful.tag.getscreen(t)) end),
-  awful.button({ }, 5, function(t) awful.tag.viewprev(awful.tag.getscreen(t)) end)
-  )
 
   local tasklists = {}
   tasklists.buttons = awful.util.table.join(
@@ -62,20 +51,8 @@ return function(widgets, icons, boxes, taglist)
   end))
 
   for s in screen do
-
     -- Create a promptbox for each screen
     boxes.prompt[s] = awful.widget.prompt()
-
-    -- We need one layoutbox per screen.
-    boxes.layout[s] = awful.widget.layoutbox(s)
-    boxes.layout[s]:buttons(awful.util.table.join(
-    awful.button({ }, 1, function () awful.layout.inc(layouts, 1) end),
-    awful.button({ }, 3, function () awful.layout.inc(layouts, -1) end),
-    awful.button({ }, 4, function () awful.layout.inc(layouts, 1) end),
-    awful.button({ }, 5, function () awful.layout.inc(layouts, -1) end)))
-
-    -- Create a taglist widget
-    taglist[s] = awful.widget.taglist(s, awful.widget.taglist.filter.all, taglist.buttons)
 
     -- Create a tasklist widget
     tasklists[s] = awful.widget.tasklist({
@@ -89,12 +66,11 @@ return function(widgets, icons, boxes, taglist)
 
     -- Widgets that are aligned to the upper left
     local left_layout = wibox.layout.fixed.horizontal()
-    left_layout:add(boxes.layout[s])
+    left_layout:add(widgets.layout(s))
     left_layout:add(spr)
-    left_layout:add(taglist[s])
+    left_layout:add(widgets.tags:widget(s))
     left_layout:add(boxes.prompt[s])
     left_layout:add(spr)
-
 
     -- Widgets that are aligned to the upper right
     local right_layout = wibox.layout.fixed.horizontal()
@@ -116,6 +92,7 @@ return function(widgets, icons, boxes, taglist)
     end
 
     if s == 1 then right_layout:add(wibox.widget.systray()) end
+    right_layout_add(widgets.display)
     right_layout_add(widgets.volume)
     right_layout_add(widgets.network)
     right_layout_add(widgets.battery)

@@ -1,21 +1,21 @@
--- Add local luarocks repo to package.path
-package.path = os.getenv('HOME')..'/.luarocks/share/lua/5.1/?.lua;'..os.getenv('HOME')..'/.luarocks/share/lua/5.1/?/init.lua;'..package.path
-package.cpath = os.getenv('HOME')..'/.luarocks/lib/lua/5.1/?.so;'..os.getenv('HOME')..'/.luarocks/lib/lua/5.1/?/init.so;'..package.cpath
+require 'init'
 
+-- lua
 local os = require 'os'
 
-require 'error_handler'
-
-local config = require 'config'
+--awesome
+local awful = require 'awful'
 local beautiful = require 'beautiful'
 local gears = require 'gears'
-local awful = require 'awful'
+local root = require 'root'
 local wibox = require 'wibox'
-local layouts = require 'layouts'
 
--- beautiful init
-local theme = require('theme.' .. config.theme)
-beautiful.init(theme)
+--local
+local autorun = require 'autorun'
+local keybindings = require 'keybindings'
+local layout = require 'layout'
+local widgets = require 'widgets'
+
 
 local icons = {}
 local boxes = {
@@ -23,62 +23,88 @@ local boxes = {
   prompt = {},
   layout = {},
 }
-local taglist = {}
 
-local widgets = {}
--- Textclock
-widgets.clock = wibox.widget.textclock('%H:%M')
--- calendar
-widgets.calendar = awful.widget.calendar_popup.month({
-  font=beautiful.font,
-  start_sunday=true,
-})
-widgets.calendar:attach(widgets.clock, "tr")
+-- setup all widgets to be drawn in layout
+local widget_builder = widgets(beautiful, true)
 
---Alt Tab
-widgets.alttab = require 'widget.alttab'
-widgets.alttab.settings.preview_box = true
-widgets.alttab.settings.preview_box_bg = "#ddddddaa"
-widgets.alttab.settings.preview_box_border = "#22222200"
-widgets.alttab.settings.preview_box_fps = 30
-widgets.alttab.settings.preview_box_delay = 150
+-- add configured widget to layout on screens
+layout(widget_builder.widgets, icons, boxes)
 
-widgets.alttab.settings.client_opacity = false
-widgets.alttab.settings.client_opacity_value = 0.5
-widgets.alttab.settings.client_opacity_delay = 150
+-- load keybindings
+local binds = keybindings(boxes, widget_builder.widgets)
 
--- Battery
-widgets.battery = require 'widget.battery'({
-  width = 30 * beautiful.scale,
-  height = 10 * beautiful.scale,
-  bolt_width = 30 * beautiful.scale,
-  bolt_height = 15 * beautiful.scale,
-  stroke_width = 2 * beautiful.scale,
-  peg_top = 4 * beautiful.scale,
-  peg_height = 6 * beautiful.scale,
-  peg_width = 4 * beautiful.scale,
-  font = beautiful.font,
-  critical_level = 0.10,
-  normal_color = beautiful.fg_normal,
-  critical_color = beautiful.fg_urgent,
-  charging_color = beautiful.fg_normal,
-})
+-- Set keys
+root.keys(binds.global.keys)
 
--- Audio
-widgets.volume = require 'widget.volume'
-
--- Net
-widgets.network = require 'widget.net'(boxes.prompt).widget
-
--- Power
-widgets.power = require 'widget.power'
-
--- Display
-widgets.display = require 'widget.display'
-
-require 'layout'(widgets, icons, boxes, taglist)
-require 'keybindings'(boxes, widgets)
-awful.rules.rules = require 'rules'
 require 'awful.autofocus'
-require 'signals'
-require 'autorun'()
+--install client rules
+awful.rules.rules = {
+  -- All clients will match this rule.
+  {rule = { },
+  properties = {
+    border_width = beautiful.border_width,
+    border_color = beautiful.border_normal,
+    focus = awful.client.focus.filter,
+    keys = binds.client.keys,
+    buttons = binds.client.buttons,
+    size_hints_honor = false
+  }},
+}
+
+--autorun clients on start
+autorun({ 
+  ['google-chrome-unstable'] = {
+    cmd=table.concat({
+      '--enable-vulkan',
+      '--process-per-site',
+      '--high-dpi-support=1',
+      '--force-device-scale-factor=2',
+      '--touch-events=enabled',
+      '--enable-native-gpu-memory-buffers',
+      '--enable-zero-copy',
+    }, ' '),
+    match='chrome',
+    rules={
+      {
+        rule = {class = 'google-chrome-unstable', class = 'Google-chrome-unstable'},
+        callback = function(c)
+          local s, t = 1, 2
+          if screen.count() >= 2 then
+            s, t = 2, 1
+          end
+          c:tags({widget_builder.widgets.tags:screen(s)[t]})
+          c:geometry({
+            width = screen[s].workarea.width,
+            height = screen[s].workarea.height,
+          })
+        end,
+      },
+    },
+  },
+  ['alacritty'] = {
+    cmd=table.concat({
+      '-t Terminal',
+      '-e '..os.getenv('HOME')..'/.config/awesome/tmux-session.sh awesome',
+    }, ' '),
+    rules={
+      {
+        rule = {class = 'alacritty'},
+        properties = {
+          tag = widget_builder.widgets.tags:screen(1)[1],
+          width = screen[1].workarea.width,
+          height = screen[1].workarea.height,
+        },
+      },
+    },
+  },
+  ['udiskie'] = {},
+  ['pulseaudio'] = {cmd='-D'},
+  ['unclutter'] = {cmd='-root'},
+  ['xautolock'] = {
+    cmd=table.concat({
+      '-time 5',
+      '-detectsleep',
+      '-locker /usr/local/bin/xautolocker',
+    }, ' '),
+  },
+})

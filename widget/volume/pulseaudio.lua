@@ -1,88 +1,51 @@
--- Copyright 2013 mokasin
--- This file is part of the Awesome Pulseaudio Widget (APW).
---
--- APW is free software: you can redistribute it and/or modify
--- it under the terms of the GNU General Public License as published by
--- the Free Software Foundation, either version 3 of the License, or
--- (at your option) any later version.
---
--- APW is distributed in the hope that it will be useful,
--- but WITHOUT ANY WARRANTY; without even the implied warranty of
--- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
--- GNU General Public License for more details.
---
--- You should have received a copy of the GNU General Public License
--- along with APW. If not, see <http://www.gnu.org/licenses/>.
+local util = require 'util'
 
 
--- Simple pulseaudio command bindings for Lua.
-
-local pulseaudio = {}
-
+local mt = {}
+mt.__index = mt
 
 local cmd = "pacmd"
-local default_sink = ""
 
-function pulseaudio:Create()
-	o = {}
-	setmetatable(o, self)
-	self.__index = self
+function mt:__call()
+	local self = setmetatable({
+	  default_sink = "",
+	  volume = 0,
+	  is_muted = false,
+	}, mt)
 
-	o.Volume = 0     -- volume of default sink
-	o.Mute = false   -- state of the mute flag of the default sink
+  self:update()	
 
-	-- retreive current state from Pulseaudio
-	pulseaudio.UpdateState(o)
-
-	return o
+	return self
 end
 
-function pulseaudio:UpdateState()
-	local f = io.popen(cmd .. " dump")
-
-	-- if the cmd can't be found
-	if f == nil then
-		return false
-	end
-
-	local out = f:read("*a")
-	f:close()
+function mt:update()
+	local out = util.run(cmd .. " dump")
 
 	-- get the default sink
-	default_sink = string.match(out, "set%-default%-sink ([^\n]+)")
+	self.default_sink = string.match(out, "set%-default%-sink ([^\n]+)")
 
-	if default_sink == nil then
-		default_sink = ""
+	if self.default_sink == nil then
+		self.default_sink = ""
 		return false
 	end
 
-	-- retreive volume of default sink
 	for sink, value in string.gmatch(out, "set%-sink%-volume ([^%s]+) (0x%x+)") do
-		if sink == default_sink then
-			self.Volume = tonumber(value) / 0x10000
+		if sink == self.default_sink then
+			self.volume = tonumber(value) / 0x10000
 		end
 	end
 
-	-- retreive mute state of default sink
 	local m
 	for sink, value in string.gmatch(out, "set%-sink%-mute ([^%s]+) (%a+)") do
-		if sink == default_sink then
+		if sink == self.default_sink then
 			m = value
 		end
 	end
 
-	self.Mute = m == "yes"
+	self.is_muted = m == "yes"
 end
 
--- Run process and wait for it to end
-function run(cmd)
-    p = io.popen(cmd)
-    p:read("*a")
-    p:close()
-end
-
--- Sets the volume of the default sink to vol from 0 to 1.
-function pulseaudio:SetVolume(vol)
+function mt:set_volume(vol)
 	if vol > 1 then
 		vol = 1
 	end
@@ -92,25 +55,22 @@ function pulseaudio:SetVolume(vol)
 	end
 
 	vol = vol * 0x10000
-	-- set…
-	run(cmd .. " set-sink-volume " .. default_sink .. " " .. string.format("0x%x", math.floor(vol)))
 
-	-- …and update values
-	self:UpdateState()
+	util.run(cmd .. " set-sink-volume " .. self.default_sink .. " " .. string.format("0x%x", math.floor(vol)))
+
+	self:update()
 end
 
 
--- Toggles the mute flag of the default default_sink.
-function pulseaudio:ToggleMute()
-	if self.Mute then
-		run(cmd .. " set-sink-mute " .. default_sink .. " 0")
+function mt:toggle_mute()
+	if self.is_muted then
+		util.run(cmd .. " set-sink-mute " .. self.default_sink .. " 0")
 	else
-		run(cmd .. " set-sink-mute " .. default_sink .. " 1")
+		util.run(cmd .. " set-sink-mute " .. self.default_sink .. " 1")
 	end
 
-	-- …and update values.
-	self:UpdateState()
+	self:update()
 end
 
 
-return pulseaudio
+return setmetatable({}, mt)
