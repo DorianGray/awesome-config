@@ -4,10 +4,16 @@ local root = require 'root'
 local gears = require 'gears'
 local awful = require 'awful'
 
-local modkey = 'Mod4'
-local altkey = 'Mod1'
+local MOD = 'Mod4'
+local ALT = 'Mod1'
 
-return function(boxes, widgets, tags)
+local mt = {
+  MOD=MOD,
+  ALT=ALT,
+}
+mt.__index = mt
+
+function mt:__call(boxes, widgets, tags)
   -- Key bindings
   local globalkeys = gears.table.join(unpack({
     -- screenshot
@@ -15,45 +21,45 @@ return function(boxes, widgets, tags)
       awful.spawn.with_shell("sleep 0.5 && scrot -s")
     end), 
 
-    awful.key({altkey, "Shift"}, "Tab", function ()
-      widgets.alttab.switch(-1, altkey, "Tab", "ISO_Left_Tab")
+    awful.key({ALT, "Shift"}, "Tab", function ()
+      widgets.alttab.switch(-1, ALT, "Tab", "ISO_Left_Tab")
     end),
     -- Default client focus
-    awful.key({altkey}, 'k',
+    awful.key({ALT}, 'k',
     function()
       awful.client.focus.byidx( 1)
       if client.focus then client.focus:raise() end
     end),
-    awful.key({altkey}, 'j',
+    awful.key({ALT}, 'j',
     function()
       awful.client.focus.byidx(-1)
       if client.focus then client.focus:raise() end
     end),
 
     -- By direction client focus
-    awful.key({modkey}, 'j',
+    awful.key({MOD}, 'j',
     function()
       awful.client.focus.bydirection('down')
       if client.focus then client.focus:raise() end
     end),
-    awful.key({modkey}, 'k',
+    awful.key({MOD}, 'k',
     function()
       awful.client.focus.bydirection('up')
       if client.focus then client.focus:raise() end
     end),
-    awful.key({modkey}, 'h',
+    awful.key({MOD}, 'h',
     function()
       awful.client.focus.bydirection('left')
       if client.focus then client.focus:raise() end
     end),
-    awful.key({modkey}, 'l',
+    awful.key({MOD}, 'l',
     function()
       awful.client.focus.bydirection('right')
       if client.focus then client.focus:raise() end
     end),
 
     -- Show/Hide Wibox
-    awful.key({modkey}, 'b', function ()
+    awful.key({MOD}, 'b', function ()
       boxes.wi[mouse.screen].visible = not boxes.wi[mouse.screen].visible
     end),
     -- Multi Monitor
@@ -62,38 +68,38 @@ return function(boxes, widgets, tags)
     end),
 
     -- Layout manipulation
-    awful.key({modkey, 'Shift'}, 'j', function ()
+    awful.key({MOD, 'Shift'}, 'j', function ()
       awful.client.swap.byidx(1)
     end),
-    awful.key({modkey, 'Shift'}, 'k', function ()
+    awful.key({MOD, 'Shift'}, 'k', function ()
       awful.client.swap.byidx(-1)
     end),
-    awful.key({modkey, 'Control'}, 'j', function ()
+    awful.key({MOD, 'Control'}, 'j', function ()
       awful.screen.focus_relative(1)
     end),
-    awful.key({modkey, 'Control'}, 'k', function ()
+    awful.key({MOD, 'Control'}, 'k', function ()
       awful.screen.focus_relative(-1)
     end),
-    awful.key({modkey,}, 'u', awful.client.urgent.jumpto),
-    awful.key({modkey,}, 'Tab',
+    awful.key({MOD,}, 'u', awful.client.urgent.jumpto),
+    awful.key({MOD,}, 'Tab',
     function ()
       awful.client.focus.history.previous()
       if client.focus then
         client.focus:raise()
       end
     end),
-    awful.key({modkey, 'Control'}, 'n',      awful.client.restore),
+    awful.key({MOD, 'Control'}, 'n',      awful.client.restore),
 
     -- Standard program
-    awful.key({modkey, 'Control'}, 'r',      awesome.restart),
-    awful.key({modkey, 'Shift'}, 'q',      awesome.quit),
+    awful.key({MOD, 'Control'}, 'r',      awesome.restart),
+    awful.key({MOD, 'Shift'}, 'q',      awesome.quit),
 
     -- Lock screen
-    awful.key({'Control', altkey}, 'l' , beautiful.command.lock),
+    awful.key({'Control', ALT}, 'l' , beautiful.command.lock),
 
     -- Prompt
-    awful.key({modkey}, 'r', function () boxes.prompt[mouse.screen]:run() end),
-    awful.key({modkey}, 'x',
+    awful.key({MOD}, 'r', function () boxes.prompt[mouse.screen]:run() end),
+    awful.key({MOD}, 'x',
     function ()
       awful.prompt.run({ prompt = 'Run Lua code: ' },
       boxes.prompt[mouse.screen].widget,
@@ -109,12 +115,12 @@ return function(boxes, widgets, tags)
   end
 
   local clientkeys = gears.table.join(
-  awful.key({modkey,}, 'f', function (c) c.fullscreen = not c.fullscreen end),
-  awful.key({altkey,}, 'F4', function (c) c:kill() end),
-  awful.key({modkey,}, 'o', function (c) c:move_to_screen(s) end),
-  awful.key({modkey,}, 't', function (c) c.ontop = not c.ontop end),
-  awful.key({modkey,}, 'n', function (c) c.minimized = true end),
-  awful.key({modkey,}, 'm', function (c)
+  awful.key({MOD,}, 'f', function (c) c.fullscreen = not c.fullscreen end),
+  awful.key({ALT,}, 'F4', function (c) c:kill() end),
+  awful.key({MOD,}, 'o', function (c) c:move_to_screen(s) end),
+  awful.key({MOD,}, 't', function (c) c.ontop = not c.ontop end),
+  awful.key({MOD,}, 'n', function (c) c.minimized = true end),
+  awful.key({MOD,}, 'm', function (c)
     c.maximized_horizontal = not c.maximized_horizontal
     c.maximized_vertical   = not c.maximized_vertical
   end)
@@ -131,3 +137,5 @@ return function(boxes, widgets, tags)
     },
   }
 end
+
+return setmetatable({}, mt)

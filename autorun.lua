@@ -1,4 +1,5 @@
 local awful = require 'awful'
+local gears = require 'gears'
 
 
 -- Autostart applications
@@ -19,9 +20,7 @@ return function(autorun)
   for app, config in pairs(autorun) do
     run_once(app..(config.cmd and ' '..config.cmd or ''), config.match)
     if config.rules then
-      for _, rule in pairs(config.rules) do
-        table.insert(awful.rules.rules, rule)
-      end
+      gears.table.join(config.rules, awful.rules.rules)
     end
   end
 end

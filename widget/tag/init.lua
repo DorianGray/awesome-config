@@ -3,16 +3,17 @@ local awesome = require 'awesome'
 local gears = require 'gears'
 local util = require 'util'
 local screen = require 'screen'
+local client = require 'client'
+local keys = require 'keybindings'
 
 
--- Create a wibox for each screen and add it
 local buttons = awful.util.table.join(
-  awful.button({ }, 1, function(tag) tag:view_only() end),
-  awful.button({ 'Mod4' }, 1, awful.client.movetotag),
-  awful.button({ }, 3, awful.tag.viewtoggle),
-  awful.button({ 'Mod4' }, 3, awful.client.toggletag),
-  awful.button({ }, 4, function(tag) awful.tag.viewnext(tag.screen) end),
-  awful.button({ }, 5, function(tag) awful.tag.viewprev(tag.screen) end)
+  awful.button({}, 1, function(tag) tag:view_only() end),
+  awful.button({'Mod4'}, 1, function(tag) client.focus:move_to_tag(tag) end),
+  awful.button({}, 3, awful.tag.viewtoggle),
+  awful.button({'Mod4'}, 3, awful.client.toggletag),
+  awful.button({}, 4, function(tag) awful.tag.viewnext(tag.screen) end),
+  awful.button({}, 5, function(tag) awful.tag.viewprev(tag.screen) end)
 )
 
 local mt = {}
@@ -52,18 +53,10 @@ function mt:widget(s)
   return awful.widget.taglist(s, awful.widget.taglist.filter.all, buttons)
 end
 
-local modkey = 'Mod4'
-local altkey = 'Mod1'
 mt.keys = {
-  awful.key({ modkey }, 'Left', awful.tag.viewprev       ),
-  awful.key({ modkey }, 'Right', awful.tag.viewnext       ),
-  awful.key({ modkey }, 'Escape', awful.tag.history.restore),
-  awful.key({ altkey, 'Shift'   }, 'l', function () awful.tag.incmwfact( 0.05) end),
-  awful.key({ altkey, 'Shift'   }, 'h', function () awful.tag.incmwfact(-0.05) end),
-  awful.key({ modkey, 'Shift'   }, 'l', function () awful.tag.incnmaster(-1) end),
-  awful.key({ modkey, 'Shift'   }, 'h', function () awful.tag.incnmaster( 1) end),
-  awful.key({ modkey, 'Control' }, 'l', function () awful.tag.incncol(-1) end),
-  awful.key({ modkey, 'Control' }, 'h', function () awful.tag.incncol( 1) end),
+  awful.key({keys.MOD}, 'Left', awful.tag.viewprev),
+  awful.key({keys.MOD}, 'Right', awful.tag.viewnext),
+  awful.key({keys.MOD}, 'Escape', awful.tag.history.restore),
 }
 
 return setmetatable({}, mt)

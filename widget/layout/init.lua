@@ -1,4 +1,5 @@
 local awful = require 'awful'
+local keys = require 'keybindings'
 
 local mt = {}
 mt.__index = mt
@@ -16,17 +17,16 @@ local layouts =  {
 function mt:__call(s, tags)
  local layout = awful.widget.layoutbox(s)
   layout:buttons(awful.util.table.join(
-  awful.button({ }, 1, function () awful.layout.inc(layouts, 1) end),
-  awful.button({ }, 3, function () awful.layout.inc(layouts, -1) end),
-  awful.button({ }, 4, function () awful.layout.inc(layouts, 1) end),
-  awful.button({ }, 5, function () awful.layout.inc(layouts, -1) end)))
+  awful.button({}, 1, function () awful.layout.inc(layouts, 1) end),
+  awful.button({}, 3, function () awful.layout.inc(layouts, -1) end),
+  awful.button({}, 4, function () awful.layout.inc(layouts, 1) end),
+  awful.button({}, 5, function () awful.layout.inc(layouts, -1) end)))
   return layout
 end
 
-local modkey='Mod4'
 mt.keys = {
-  awful.key({ modkey,           }, 'space',  function () awful.layout.inc(layouts,  1)  end),
-  awful.key({ modkey, 'Shift'   }, 'space',  function () awful.layout.inc(layouts, -1)  end),
+  awful.key({keys.MOD,}, 'space',  function () awful.layout.inc(layouts, 1) end),
+  awful.key({keys.MOD, 'Shift'}, 'space', function () awful.layout.inc(layouts, -1) end),
 }
 
 return setmetatable({}, mt)

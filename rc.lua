@@ -51,6 +51,7 @@ awful.rules.rules = {
   }},
 }
 
+local signals = require 'signals'
 --autorun clients on start
 autorun({ 
   ['google-chrome-unstable'] = {
