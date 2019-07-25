@@ -6,9 +6,10 @@ local screen = require 'screen'
 local form = require 'widget.form'
 local form_textbox = require 'widget.form.textbox'
 local slideout_panel = require 'widget.slideout_panel'
+local client = require 'client'
 
 
-return function(widgets, icons, boxes)
+return function(widgets, boxes)
   -- Wibox
   -- Separators
   local spr = wibox.widget.textbox(' ')
@@ -16,6 +17,7 @@ return function(widgets, icons, boxes)
   local arrl_ld = separator.arrow_left('alpha', beautiful.bg_focus)
 
   local tasklists = {}
+  local instance = nil
   tasklists.buttons = awful.util.table.join(
   awful.button({ }, 1, function (c)
     if c == client.focus then
@@ -25,7 +27,7 @@ return function(widgets, icons, boxes)
       -- :isvisible() makes no sense
       c.minimized = false
       if not c:isvisible() then
-        awful.tag.viewonly(c:tags()[1])
+        c:tags()[1]:view_only()
       end
       -- This will also un-minimize
       -- the client, if needed
@@ -41,11 +43,11 @@ return function(widgets, icons, boxes)
       instance = awful.menu.clients({width=250 * beautiful.scale})
     end
   end),
-  awful.button({ }, 4, function ()
+  awful.button({}, 4, function ()
     awful.client.focus.byidx(1)
     if client.focus then client.focus:raise() end
   end),
-  awful.button({ }, 5, function ()
+  awful.button({}, 5, function ()
     awful.client.focus.byidx(-1)
     if client.focus then client.focus:raise() end
   end))
@@ -62,15 +64,17 @@ return function(widgets, icons, boxes)
     })
 
     -- Create the wibox
-    boxes.wi[s] = awful.wibar({ position = 'top', screen = s, height = 32 * beautiful.scale})
+    boxes.wi[s] = awful.wibar({
+      position = 'top',
+      screen = s,
+      height = 32 * beautiful.scale,
+    })
 
     -- Widgets that are aligned to the upper left
     local left_layout = wibox.layout.fixed.horizontal()
     left_layout:add(widgets.layout(s))
-    left_layout:add(spr)
     left_layout:add(widgets.tags:widget(s))
     left_layout:add(boxes.prompt[s])
-    left_layout:add(spr)
 
     -- Widgets that are aligned to the upper right
     local right_layout = wibox.layout.fixed.horizontal()
@@ -79,12 +83,15 @@ return function(widgets, icons, boxes)
       local arg = {...}
       if right_layout_toggle then
         right_layout:add(arrl_ld)
-        for i, n in pairs(arg) do
-          right_layout:add(wibox.container.background(n ,beautiful.bg_focus))
+        for _, n in pairs(arg) do
+          right_layout:add(wibox.container.background(
+            n ,
+            beautiful.bg_focus
+          ))
         end
       else
         right_layout:add(arrl_dl)
-        for i, n in pairs(arg) do
+        for _, n in pairs(arg) do
           right_layout:add(n)
         end
       end

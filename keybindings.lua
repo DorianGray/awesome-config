@@ -6,10 +6,14 @@ local awful = require 'awful'
 
 local MOD = 'Mod4'
 local ALT = 'Mod1'
+local SHIFT = 'Shift'
+local CONTROL = 'Control'
 
 local mt = {
   MOD=MOD,
   ALT=ALT,
+  SHIFT=SHIFT,
+  CONTROL=CONTROL,
 }
 mt.__index = mt
 

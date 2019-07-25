@@ -3,7 +3,8 @@ local awful = require 'awful'
 local beautiful = require 'beautiful'
 local string = require 'string'
 local table = require 'table'
-local util = require 'util'
+local process = require 'awful.aio.process'
+local file = require 'awful.aio.file'
 local icon = require 'widget.net.icon.signal'(
   32 * beautiful.scale,
   32 * beautiful.scale
@@ -20,7 +21,7 @@ local function get_net_status()
   local times = 0
 
   local function ping()
-    local output = util.run('ping -c 1 -W 1 8.8.8.8 | grep \'100% packet loss\'', true)
+    local output = process.run('ping -c 1 -W 1 8.8.8.8 | grep \'100% packet loss\'').stdout:read_all()
     if output and times <= 4 then
       times = times + 1
       return ping()
@@ -86,13 +87,13 @@ end
 
 --Make a table of the local interfaces
 local function get_local_interfaces()
-  local output = util.run('ip link', true)
-  return parse_ip_link(output, util.read_file('/proc/net/wireless'))
+  local output = process.run('ip link').stdout:read_all()
+  return parse_ip_link(output, file('/proc/net/wireless'):read_all())
 end
 
 local function get_wifi_link(iface)
-  local wireless = parse_proc_net_wireless(util.read_file('/proc/net/wireless'))
-  local wpa_output = util.run('wpa_cli status', true)
+  local wireless = parse_proc_net_wireless(file('/proc/net/wireless'):read_all())
+  local wpa_output = process.run('wpa_cli status').stdout:read_all()
   local info = {}
   for line in wpa_output:gmatch('([^\n]+)') do
     local _, _, key, value = line:find('^([^=]*)=([^=]*)$')
@@ -111,7 +112,7 @@ end
 local scan_timer = nil
 --make a table of the scanned wifis
 function net:get_area_wifi(iface)
-  local scan_output = util.run('wpa_cli abort_scan && wpa_cli scan', true)
+  local scan_output = process.run('wpa_cli abort_scan && wpa_cli scan').stdout:read_all()
   if scan_output:match('FAIL') then
     if scan_timer and scan_timer.started then
       scan_timer:stop()
@@ -126,7 +127,7 @@ function net:get_area_wifi(iface)
       timeout   = 1,
       autostart = false,
       callback  = function()
-        local output = util.run('wpa_cli scan_results', true)
+        local output = process.run('wpa_cli scan_results').stdout:read_all()
         local _, count = output:gsub('\n', '\n')
         if count <= 3 then
           if scan_timer.started then
@@ -205,7 +206,7 @@ function net:toggle_interface(iface)
     if interface[1] == iface then 
       local action = interface[3] == 'connected'  and 'down' or 'up'
       local command = 'sudo ip link set dev '..iface..' '..action
-      util.run(command, true)
+      process.run(command).stdout:read_all()
     end
   end
 end
@@ -215,7 +216,7 @@ local function disconnect_wifi()
 end
 
 function net:toggle_wifi(iface)
-  local output = util.run('sudo rfkill -r -n', true)
+  local output = process.run('sudo rfkill -r -n').stdout:read_all()
   local rfkill = {}
   for line in output:gmatch("[^\r\n]+") do
     local interface = {}
@@ -237,7 +238,7 @@ function net:toggle_wifi(iface)
         self.ssid = ''
         self.frequency = 0
       end
-      util.run('sudo rfkill '..action..' '..wtype, true)
+      process.run('sudo rfkill '..action..' '..wtype).stdout:read_all()
       self:menu()
     end
   end

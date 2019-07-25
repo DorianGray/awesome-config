@@ -1,4 +1,4 @@
-local util = require 'util'
+local process = require 'awful.aio.process'
 
 
 local mt = {}
@@ -19,7 +19,7 @@ function mt:__call()
 end
 
 function mt:update()
-	local out = util.run(cmd .. " dump")
+	local out = process.run(cmd .. " dump").stdout:read_all()
 
 	-- get the default sink
 	self.default_sink = string.match(out, "set%-default%-sink ([^\n]+)")
@@ -56,7 +56,7 @@ function mt:set_volume(vol)
 
 	vol = vol * 0x10000
 
-	util.run(cmd .. " set-sink-volume " .. self.default_sink .. " " .. string.format("0x%x", math.floor(vol)))
+	process.run(cmd .. " set-sink-volume " .. self.default_sink .. " " .. string.format("0x%x", math.floor(vol)))
 
 	self:update()
 end
@@ -64,9 +64,9 @@ end
 
 function mt:toggle_mute()
 	if self.is_muted then
-		util.run(cmd .. " set-sink-mute " .. self.default_sink .. " 0")
+		process.run(cmd .. " set-sink-mute " .. self.default_sink .. " 0")
 	else
-		util.run(cmd .. " set-sink-mute " .. self.default_sink .. " 1")
+		process.run(cmd .. " set-sink-mute " .. self.default_sink .. " 1")
 	end
 
 	self:update()

@@ -8,7 +8,6 @@ local icon = require 'widget.display.icon.display'(
 local naughty = require 'naughty'
 local xrandr = require 'widget.display.xrandr'
 local gears = require 'gears'
-local util = require 'util'
 
 
 local function arrange(out)
@@ -84,7 +83,7 @@ local function menu()
     table.insert(menu, {
       label,
       function()
-        util.run(table.concat(cmd, ' '))
+        process.run(table.concat(cmd, ' '))
         awesome.restart()
       end,
     })

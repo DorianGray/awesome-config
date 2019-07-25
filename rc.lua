@@ -17,7 +17,6 @@ local layout = require 'layout'
 local widgets = require 'widgets'
 
 
-local icons = {}
 local boxes = {
   wi = {},
   prompt = {},
@@ -28,7 +27,7 @@ local boxes = {
 local widget_builder = widgets(beautiful, true)
 
 -- add configured widget to layout on screens
-layout(widget_builder.widgets, icons, boxes)
+layout(widget_builder.widgets, boxes)
 
 -- load keybindings
 local binds = keybindings(boxes, widget_builder.widgets)
@@ -50,7 +49,7 @@ awful.rules.rules = {
     size_hints_honor = false
   }},
 }
-
+-- register global signal handlers
 local signals = require 'signals'
 --autorun clients on start
 autorun({ 

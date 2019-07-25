@@ -1,8 +1,8 @@
-local util = require 'util'
+local process = require 'awful.aio.process'
 
 local function outputs()
   local outputs = {}
-  local xrandr = util.run('xrandr -q --current')
+  local xrandr = process.run('xrandr -q --current').stdout:read_all()
   local current = nil
   for line in xrandr:gmatch('[^\r\n]+') do
     if not line:match('^Screen') then

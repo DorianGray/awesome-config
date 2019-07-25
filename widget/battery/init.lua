@@ -1,10 +1,11 @@
 local base = require 'wibox.widget.base'
 local awful = require 'awful'
+local process = require 'awful.aio.process'
+local file = require 'awful.aio.file'
 local color = require 'gears.color'
 local beautiful = require 'beautiful'
 local lgi = require 'lgi'
 local gears = require 'gears'
-local util = require 'util'
 
 local o = { mt = {} }
 
@@ -23,31 +24,31 @@ local function round(num, idp)
 end
 
 local function acpi_is_on_ac_power(battery)
-  local o = util.read_file('/sys/class/power_supply/' .. battery .. '/status')
+  local o = file('/sys/class/power_supply/' .. battery .. '/status'):read_all()
   return not string.match(o, 'Discharging')
 end
 
 local function acpi_battery_is_present(battery)
-  local o = util.read_file('/sys/class/power_supply/' .. battery .. '/present')
+  local o = file('/sys/class/power_supply/' .. battery .. '/present'):read_all()
   return string.find(o, '1')
 end
 
 local function acpi_battery_is_charging(battery)
-  local o = util.read_file('/sys/class/power_supply/' .. battery .. '/status')
+  local o = file('/sys/class/power_supply/' .. battery .. '/status'):read_all()
   return string.find(o, 'Charging')
 end
 
 local function acpi_battery_percent(battery)
-  local now  = util.read_file('/sys/class/power_supply/' .. battery .. '/energy_now') or
-         util.read_file('/sys/class/power_supply/' .. battery .. '/charge_now')
-  local full = util.read_file('/sys/class/power_supply/' .. battery .. '/energy_full') or
-         util.read_file('/sys/class/power_supply/' .. battery .. '/charge_full')
+  local now  =  file('/sys/class/power_supply/' .. battery .. '/energy_now') or
+                file('/sys/class/power_supply/' .. battery .. '/charge_now')
+  local full =  file('/sys/class/power_supply/' .. battery .. '/energy_full') or
+                file('/sys/class/power_supply/' .. battery .. '/charge_full')
   if (now == nil) or (full == nil) then return 0 end
-  return tonumber(now)/tonumber(full)
+  return tonumber(now:read_all())/tonumber(full:read_all())
 end
 
 local function acpi_battery_runtime(battery)
-  local output = util.run('acpi')
+  local output = process.run('acpi').stdout:read_all()
   if not output then
     return 'No Battery Found'
   end
