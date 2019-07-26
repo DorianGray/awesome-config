@@ -15,7 +15,7 @@ local layouts =  {
 
 -- We need one layoutbox per screen.
 function mt:__call(s, tags)
- local layout = awful.widget.layoutbox(s)
+  local layout = awful.widget.layoutbox(s)
   layout:buttons(awful.util.table.join(
   awful.button({}, 1, function () awful.layout.inc(layouts, 1) end),
   awful.button({}, 3, function () awful.layout.inc(layouts, -1) end),

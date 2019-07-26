@@ -1,7 +1,7 @@
 local base = require 'wibox.widget.base'
 local awful = require 'awful'
-local process = require 'awful.aio.process'
-local file = require 'awful.aio.file'
+local process = require 'awful.io.process'
+local file = require 'awful.io.file'
 local color = require 'gears.color'
 local beautiful = require 'beautiful'
 local lgi = require 'lgi'
@@ -48,7 +48,7 @@ local function acpi_battery_percent(battery)
 end
 
 local function acpi_battery_runtime(battery)
-  local output = process.run('acpi').stdout:read_all()
+  local output = process.run('acpi').stdout()
   if not output then
     return 'No Battery Found'
   end

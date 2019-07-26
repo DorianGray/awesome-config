@@ -1,4 +1,4 @@
-local process = require 'awful.aio.process'
+local process = require 'awful.io.process'
 
 
 local mt = {}
@@ -19,7 +19,7 @@ function mt:__call()
 end
 
 function mt:update()
-	local out = process.run(cmd .. " dump").stdout:read_all()
+	local out = process.run(cmd .. " dump").stdout()
 
 	-- get the default sink
 	self.default_sink = string.match(out, "set%-default%-sink ([^\n]+)")

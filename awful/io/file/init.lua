@@ -1,5 +1,6 @@
 local lgi = require 'lgi'
-local stream = require 'awful.aio.stream'
+local stream = require 'awful.io.stream'
+
 
 local file = {}
 file.__index = file

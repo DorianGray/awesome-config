@@ -1,6 +1,8 @@
 local lgi = require 'lgi'
 local gears = require 'gears'
 
+
+local static = {}
 local stream = {}
 stream.__index = stream
 
@@ -20,7 +22,7 @@ local MODE_FACTORY = {
 
 stream.MODE = MODE
 
-function stream:__call(args)
+function stream:new(args)
   local self = setmetatable({}, stream)
   args = args or {}
   self.mode = args.mode or MODE.read 
@@ -28,6 +30,10 @@ function stream:__call(args)
   self.closed = false
   self.mode = args.mode
   return self
+end
+
+function stream:__call()
+  return self:read_all()
 end
 
 function stream:close()
@@ -91,4 +97,4 @@ function stream:read_lines()
   end)
 end
 
-return setmetatable({}, stream)
+return setmetatable(static, {__call=stream.new})

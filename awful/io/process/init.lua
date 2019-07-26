@@ -1,15 +1,25 @@
 local lgi = require 'lgi'
-local stream = require 'awful.aio.stream'
 local gears = require 'gears'
 local awful = require 'awful'
-
+local stream = require 'awful.io.stream'
 local unpack = unpack or table.unpack
+local type = type
 
 
+local static = {}
 local process = {}
 process.__index = process
 
-function process:__call(args)
+function static.run(command)
+  local p = process:new({
+    shell=awful.util.shell,
+    command=command,
+  })
+  p:start()
+  return p
+end
+
+function process:new(args)
   local self = setmetatable({}, process)
   if type(args) == 'string' then
     args = {command=args}
@@ -17,17 +27,9 @@ function process:__call(args)
   self.args = args.args or {}
   self.command = args.command
   self.shell = args.shell
+  self.env = args.env
   self.started = false
   return self
-end
-
-function process.run(command)
-  local p = process.__call(process, {
-    shell=awful.util.shell,
-    command=command,
-  })
-  p:start()
-  return p
 end
 
 function process:start()
@@ -82,4 +84,4 @@ function process:exit_callback(exit_type, code)
   }
 end
 
-return setmetatable({}, process)
+return setmetatable(static, {__call=process.new})
