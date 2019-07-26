@@ -1,31 +1,36 @@
 local lgi = require 'lgi'
 local gears = require 'gears'
 
+local table = table
+local unpack = table.unpack or unpack
+local setmetatable = setmetatable
+local coroutine = coroutine
+
 
 local static = {}
 local stream = {}
 stream.__index = stream
 
 local MODE = {
-  read='read',
-  wite='write',
+  READ='read',
+  WRITE='write',
 }
+static.MODE = MODE
+
 
 local MODE_FACTORY = {
-  read=function(stream)
+  [MODE.READ]=function(stream)
     return lgi.Gio.DataInputStream.new(stream)
   end,
-  write=function(stream)
+  [MODE.WRITE]=function(stream)
     return lgi.Gio.DataOutputStream.new(stream)
   end,
 }
 
-stream.MODE = MODE
-
 function stream:new(args)
   local self = setmetatable({}, stream)
   args = args or {}
-  self.mode = args.mode or MODE.read 
+  self.mode = args.mode or MODE.READ 
   self.data = MODE_FACTORY[self.mode](args.stream)
   self.closed = false
   self.mode = args.mode

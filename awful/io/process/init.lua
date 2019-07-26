@@ -2,8 +2,12 @@ local lgi = require 'lgi'
 local gears = require 'gears'
 local awful = require 'awful'
 local stream = require 'awful.io.stream'
+
+local table = table
 local unpack = unpack or table.unpack
 local type = type
+local setmetatable = setmetatable
+local error = error
 
 
 local static = {}
@@ -56,7 +60,7 @@ function process:start()
   self.exit = nil
   self.pid = pid
   self.snid = snid
-  self.stdin = stream({mode='write', stream=lgi.Gio.UnixOutputStream.new(stdin, true)})
+  self.stdin = stream({mode=stream.MODE.WRITE, stream=lgi.Gio.UnixOutputStream.new(stdin, true)})
   self.stdout = stream({stream=lgi.Gio.UnixInputStream.new(stdout, true)})
   self.stderr = stream({stream=lgi.Gio.UnixInputStream.new(stderr, true)})
 end

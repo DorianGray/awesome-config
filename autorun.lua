@@ -17,10 +17,12 @@ local function run_once(cmd, match)
 end
 
 return function(autorun) 
+  local rules = {}
   for app, config in pairs(autorun) do
     run_once(app..(config.cmd and ' '..config.cmd or ''), config.match)
     if config.rules then
-      gears.table.join(config.rules, awful.rules.rules)
+      table.insert(rules, config.rules)
     end
   end
+  awful.rules.rules = gears.table.join(awful.rules.rules, unpack(rules))
 end

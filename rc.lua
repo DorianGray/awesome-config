@@ -50,7 +50,7 @@ awful.rules.rules = {
   }},
 }
 -- register global signal handlers
-local signals = require 'signals'
+require 'signals'
 --autorun clients on start
 autorun({ 
   ['google-chrome-unstable'] = {
