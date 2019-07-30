@@ -45,13 +45,13 @@ function process:start()
     command = {self.shell, '-c', unpack(command)}
   end
   local pid, snid, stdin, stdout, stderr = awesome.spawn(
-    command,
-    true,
-    true,
-    true,
-    true,
+    command, -- the command to run
+    true, -- enable startup notification handling
+    true, -- stdin
+    true, -- stdout
+    true, -- stderr
     function(exit_type, code) self:exit_callback(exit_type, code) end,
-    self.env
+    self.env -- environment table
   )
   if type(pid) == 'string' then
     error(pid)
