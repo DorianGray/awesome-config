@@ -1,5 +1,6 @@
 local awful = require 'awful'
 local gears = require 'gears'
+local process = require 'awful.io.process'
 
 
 -- Autostart applications
@@ -11,9 +12,11 @@ local function run_once(cmd, match)
       match = cmd:sub(0, firstspace-1)
     end
   end
-  awful.spawn.with_shell(
-    '! pgrep -u $USER -x ' .. match .. ' > /dev/null && exec ' .. cmd
-  )
+  local p = process.run('pgrep -u $USER -x ' .. match)
+  p:wait()
+  if p.exit.code == 1 then
+    process.run('exec '..cmd)
+  end
 end
 
 return function(autorun) 

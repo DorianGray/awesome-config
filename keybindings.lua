@@ -3,6 +3,7 @@ local beautiful = require 'beautiful'
 local root = require 'root'
 local gears = require 'gears'
 local awful = require 'awful'
+local process = require 'awful.io.process'
 
 local MOD = 'Mod4'
 local ALT = 'Mod1'
@@ -22,7 +23,7 @@ function mt:__call(boxes, widgets, tags)
   local globalkeys = gears.table.join(unpack({
     -- screenshot
     awful.key({}, "Print", function ()
-      awful.spawn.with_shell("sleep 0.5 && scrot -s")
+      process.run("sleep 0.5 && scrot -s")
     end), 
 
     awful.key({ALT, "Shift"}, "Tab", function ()

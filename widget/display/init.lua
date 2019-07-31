@@ -1,5 +1,6 @@
 local awesome = require 'awesome'
 local awful = require 'awful'
+local process = require 'awful.io.process'
 local beautiful = require 'beautiful'
 local icon = require 'widget.display.icon.display'(
   32 * beautiful.scale,
@@ -151,7 +152,7 @@ end
 
 widget.menu = args.menu
 widget.keys = {
-  awful.key({ }, "XF86MonBrightnessDown", function () awful.spawn("xbacklight -dec 5") end),
-  awful.key({ }, "XF86MonBrightnessUp", function () awful.spawn("xbacklight -inc 5") end),
+  awful.key({ }, "XF86MonBrightnessDown", function () process.run("xbacklight -dec 5") end),
+  awful.key({ }, "XF86MonBrightnessUp", function () process.run("xbacklight -inc 5") end),
 }
 return widget

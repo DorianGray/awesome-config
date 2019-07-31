@@ -1,6 +1,6 @@
-local awful = require 'awful'
 local gears = require 'gears'
 local util = require 'util'
+local process = require 'awful.io.process'
 
 local themes_dir = util.script_path()
 local scale = 2
@@ -57,16 +57,16 @@ local theme = {
 
 	command = {
     lock = function()
-      awful.spawn.with_shell('/usr/local/bin/lock-screen')
+      process.run('/usr/local/bin/lock-screen')
     end,
     logout = function()
-      awful.spawn.with_shell('sudo /usr/local/bin/logout')
+      process.run('sudo /usr/local/bin/logout')
     end,
     shutdown = function()
-      awful.spawn.with_shell('sudo openrc-shutdown -p now')
+      process.run('sudo openrc-shutdown -p now')
     end,
     reboot = function()
-      awful.spawn.with_shell('sudo openrc-shutdown -r now')
+      process.run('sudo openrc-shutdown -r now')
     end,
   },
 }
