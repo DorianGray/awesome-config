@@ -1,12 +1,14 @@
 local wibox = require 'wibox'
 local beautiful = require 'beautiful'
 local awful = require 'awful'
+local gears = require 'gears'
 local separator = require 'widget.separator'
 local screen = require 'screen'
 local form = require 'widget.form'
 local form_textbox = require 'widget.form.textbox'
 local slideout_panel = require 'widget.slideout_panel'
 local client = require 'client'
+local lgi = require 'lgi'
 
 
 return function(widgets, boxes)
@@ -61,6 +63,49 @@ return function(widgets, boxes)
       screen = s,
       filter = awful.widget.tasklist.filter.currenttags,
       buttons = tasklists.buttons,
+      layout  = wibox.layout.fixed.horizontal(),
+      widget_template = {
+        {
+          id = 'clienticon',
+          widget = awful.widget.clienticon,
+        },
+        create_callback = function(self, c, index, objects)
+          local icon = self:get_children_by_id('clienticon')[1]
+          if c.update_icon == nil then
+            local surface = gears.surface.duplicate_surface(c.icon)
+            local width, height = gears.surface.get_size(surface)
+            local pattern = lgi.cairo.Pattern.create_for_surface(surface)
+            local cr = lgi.cairo.Context(surface)
+            cr:rectangle(0, 0, width, height)
+            cr:set_source_rgb(0, 0, 0)
+            cr:set_operator(lgi.cairo.Operator.HSL_SATURATION)
+            cr:mask(pattern)
+
+            local real_client = c
+            local dummy_client = {icon=surface, valid=c.valid, icon_sizes = {{width, height}}, get_icon=function() return surface end}
+            function c:update_icon()
+              if self == client.focus then
+                icon.client = real_client
+              else
+                icon.client = dummy_client
+              end
+            end
+          end
+          local tooltip = awful.tooltip({
+            objects = {self},
+            timer_function = function()
+              return c.name
+            end,
+            align = "left",
+            mode = "outside",
+            preferred_positions = {"left"},
+          })
+        end,
+        update_callback = function(self, c, index, objects)
+          c:update_icon()
+        end,
+        layout = wibox.layout.align.vertical,
+      },
     })
 
     -- Create the wibox

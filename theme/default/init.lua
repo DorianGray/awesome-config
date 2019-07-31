@@ -50,7 +50,7 @@ local theme = {
 	layout_magnifier = themes_dir .. "icons/magnifier.png",
 	layout_floating = themes_dir .. "icons/floating.png",
 
-	tasklist_disable_icon = true,
+	tasklist_disable_icon = false,
 	tasklist_floating = "",
 	tasklist_maximized_horizontal = "",
 	tasklist_maximized_vertical = "",
