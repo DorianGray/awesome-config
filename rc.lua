@@ -72,7 +72,7 @@ autorun({
           if screen.count() >= 2 then
             s, t = 2, 1
           end
-          c:tags({widget_builder.widgets.tags:screen(s)[t]})
+          c:tags({widget_builder.widgets.tag:screen(s)[t]})
           c:geometry({
             width = screen[s].workarea.width,
             height = screen[s].workarea.height,
@@ -90,7 +90,7 @@ autorun({
       {
         rule = {class = 'alacritty'},
         properties = {
-          tag = widget_builder.widgets.tags:screen(1)[1],
+          tag = widget_builder.widgets.tag:screen(1)[1],
           width = screen[1].workarea.width,
           height = screen[1].workarea.height,
         },

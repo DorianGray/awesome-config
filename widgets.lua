@@ -1,5 +1,7 @@
 local wibox = require 'wibox'
 local awful = require 'awful'
+local tag = require 'widget.tag'
+local task = require 'widget.task'
 
 local mt = {}
 mt.__index = mt
@@ -19,7 +21,9 @@ function mt:build(theme)
   -- Layout control
   widgets.layout = require 'widget.layout'
   -- Tag Control
-  widgets.tags = require 'widget.tag'()
+  widgets.tag = tag()
+  -- Task List
+  widgets.task = task()
   -- Textclock
   widgets.clock = wibox.widget.textclock('%H:%M')
   -- calendar
