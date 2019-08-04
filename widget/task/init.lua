@@ -11,12 +11,12 @@ local task = {}
 task.__index = task
 
 function static.update_callback(self, c, index, objects)
-  c:update_icon()
+  self:update_icon()
 end
 
 function static.create_callback(self, c, index, objects)
   local icon = self:get_children_by_id('clienticon')[1]
-  if c.update_icon == nil then
+  if self.update_icon == nil then
     local surface = gears.surface.duplicate_surface(c.icon)
     local width, height = gears.surface.get_size(surface)
     local pattern = lgi.cairo.Pattern.create_for_surface(surface)
@@ -28,8 +28,8 @@ function static.create_callback(self, c, index, objects)
 
     local real_client = c
     local dummy_client = {icon=surface, valid=c.valid, icon_sizes = {{width, height}}, get_icon=function() return surface end}
-    function c:update_icon()
-      if self == client.focus then
+    function self:update_icon()
+      if c == client.focus then
         icon.client = real_client
       else
         icon.client = dummy_client
@@ -46,7 +46,6 @@ function static.create_callback(self, c, index, objects)
     preferred_positions = {"left"},
   })
 end
-
 
 local instance = nil
 static.buttons = awful.util.table.join(unpack({

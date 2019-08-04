@@ -152,7 +152,6 @@ end
 
 widget.menu = args.menu
 widget.keys = {
-  awful.key({ }, "XF86MonBrightnessDown", function () process.run("xbacklight -dec 5") end),
-  awful.key({ }, "XF86MonBrightnessUp", function () process.run("xbacklight -inc 5") end),
+  awful.key({}, "F8", function() widget:show_tooltip() end),
 }
 return widget

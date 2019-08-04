@@ -1,41 +1,35 @@
 local cairo = require("lgi").cairo
 local mouse = mouse
 local screen = screen
-local wibox = require('wibox')
+local wibox = require 'wibox'
 local table = table
 local keygrabber = keygrabber
-local math = require('math')
-local awful = require('awful')
-local gears = require("gears")
+local math = require 'math'
+local awful = require 'awful'
+local gears = require 'gears'
 local client = client
-awful.client = require('awful.client')
+awful.client = require 'awful.client'
 local timer = gears.timer
-local naughty = require("naughty")
+local naughty = require 'naughty'
+local keys = require 'keybindings'
+local beautiful = require 'beautiful'
 
 local surface = cairo.ImageSurface(cairo.Format.RGB24, 20, 20)
 local cr = cairo.Context(surface)
 
 -- settings
 
-local settings = { 
-  preview_box = true,
-  preview_box_bg = "#ddddddaa",
-  preview_box_border = "#22222200",
-  preview_box_fps = 30,
-  preview_box_delay = 150,
-
-  client_opacity = false,
-  client_opacity_value = 0.5,
-  client_opacity_delay = 150,
-}
+local settings = beautiful.alttab
 
 -- Create a wibox to contain all the client-widgets
-local preview_wbox = wibox({ width = screen[mouse.screen.index].geometry.width })
-preview_wbox.border_width = 3
-preview_wbox.ontop = true
-preview_wbox.visible = false
+local preview_wbox = wibox({
+  width = screen[mouse.screen.index].geometry.width,
+  border_width = 3,
+  ontop = true,
+  visible = false,
+})
 
-local preview_live_timer = timer({}) --( {timeout = 1/settings.preview_box_fps} )
+local preview_live_timer = timer({})
 local preview_widgets = {}
 
 local altTabTable = {}
@@ -431,16 +425,17 @@ local function switch(dir, alt, tab, shift_tab)
 
   -- switch to next client
   altTabIndex = cycle(altTabTable, altTabIndex, dir)
+end
 
-end -- function altTab
-
-local altkey = 'Mod1'
 return {
   switch = switch,
   settings = settings,
   keys = {
-    awful.key({altkey}, "Tab", function ()
-      switch(1, altkey, "Tab", "ISO_Left_Tab")
+    awful.key({keys.ALT}, "Tab", function ()
+      switch(1, keys.ALT, "Tab", "ISO_Left_Tab")
+    end),
+    awful.key({keys.ALT, "Shift"}, "Tab", function ()
+      widgets.alttab.switch(-1, keys.ALT, "Tab", "ISO_Left_Tab")
     end),
   },
 }

@@ -16,4 +16,5 @@ return {
   table = {
     values = table_values,
   },
+  autorun = require 'util.autorun',
 }

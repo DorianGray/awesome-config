@@ -2,6 +2,9 @@ local beautiful = require 'beautiful'
 local awful = require 'awful'
 local wibox = require 'wibox'
 local client = require 'client'
+local screen = require 'screen'
+
+require 'awful.autofocus'
 
 -- Signals
 -- signal function to execute when a new client appears.

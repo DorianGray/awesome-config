@@ -11,50 +11,83 @@ local root = require 'root'
 local wibox = require 'wibox'
 
 --local
-local autorun = require 'autorun'
+local autorun = require 'util.autorun'
 local keybindings = require 'keybindings'
-local layout = require 'layout'
-local widgets = require 'widgets'
+local slideout_panel = require 'widget.slideout_panel'
+local widget = require 'widget'
 
+local unpack = table.unpack or unpack
 
-local boxes = {
-  wi = {},
-  prompt = {},
-  layout = {},
-}
 
 -- setup all widgets to be drawn in layout
-local widget_builder = widgets(beautiful, true)
+local w = {
+  wibar = widget.wibar(),
+  layout = widget.layout,
+  tag = widget.tag(),
+  task = widget.task(),
+  clock = wibox.widget.textclock('%H:%M'),
+  calendar = awful.widget.calendar_popup.month({
+    font=beautiful.font,
+    start_sunday=true,
+  }),
+  alttab = widget.alttab,
+  battery = widget.battery(beautiful.battery),
+  volume = widget.volume,
+  network = widget.net(),
+  power = widget.power,
+  display = widget.display,
+} 
+w.calendar:attach(w.clock, "tr")
 
--- add configured widget to layout on screens
-layout(widget_builder.widgets, boxes)
+-- Wibar setup, one per screen
+for s in screen do
+  local wibar = w.wibar:widget(s)
+
+  wibar.layout.left:add(w.layout(s))
+  wibar.layout.left:add(w.tag:widget(s))
+
+  --systray only on primary screen
+  if s.index == 1 then wibar.layout.right:add(wibox.widget.systray()) end
+  wibar.layout.right:add(w.display)
+  wibar.layout.right:add(w.volume)
+  wibar.layout.right:add(w.network.widget)
+  wibar.layout.right:add(w.battery)
+  wibar.layout.right:add(w.clock)
+  wibar.layout.right:add(w.power)
+
+  wibar.layout.middle:add(w.task:widget(s))
+
+  s.right_panel = slideout_panel(s, 'right')
+end
 
 -- load keybindings
-local binds = keybindings(boxes, widget_builder.widgets)
-
+local binds = keybindings()
 -- Set keys
-root.keys(binds.global.keys)
 
-require 'awful.autofocus'
---install client rules
-awful.rules.rules = {
-  -- All clients will match this rule.
-  {rule = { },
+--install default client rules
+table.insert(awful.rules.rules, {
   properties = {
     border_width = beautiful.border_width,
     border_color = beautiful.border_normal,
     focus = awful.client.focus.filter,
-    keys = binds.client.keys,
-    buttons = binds.client.buttons,
-    size_hints_honor = false
-  }},
-}
+    keys = binds.client,
+    size_hints_honor = false,
+  },
+})
+
+for _, widget in pairs(w) do
+  if type(widget) == 'table' and widget.keys then
+    binds:register('global', widget.keys)
+  end
+end
+
+root.keys(binds.global)
 -- register global signal handlers
 require 'signals'
 --autorun clients on start
 autorun({ 
   ['google-chrome-unstable'] = {
-    cmd=table.concat({
+    args={
       '--enable-vulkan',
       '--process-per-site',
       '--high-dpi-support=1',
@@ -62,7 +95,7 @@ autorun({
       '--touch-events=enabled',
       '--enable-native-gpu-memory-buffers',
       '--enable-zero-copy',
-    }, ' '),
+    },
     match='chrome',
     rules={
       {
@@ -72,7 +105,7 @@ autorun({
           if screen.count() >= 2 then
             s, t = 2, 1
           end
-          c:tags({widget_builder.widgets.tag:screen(s)[t]})
+          c:tags({w.tag:screen(s)[t]})
           c:geometry({
             width = screen[s].workarea.width,
             height = screen[s].workarea.height,
@@ -82,15 +115,15 @@ autorun({
     },
   },
   ['alacritty'] = {
-    cmd=table.concat({
+    args={
       '-t Terminal',
       '-e '..os.getenv('HOME')..'/.config/awesome/tmux-session.sh awesome',
-    }, ' '),
+    },
     rules={
       {
         rule = {class = 'alacritty'},
         properties = {
-          tag = widget_builder.widgets.tag:screen(1)[1],
+          tag = w.tag:screen(1)[1],
           width = screen[1].workarea.width,
           height = screen[1].workarea.height,
         },
@@ -98,13 +131,13 @@ autorun({
     },
   },
   ['udiskie'] = {},
-  ['pulseaudio'] = {cmd='-D'},
-  ['unclutter'] = {cmd='-root'},
+  ['pulseaudio'] = {args={'-D'}},
+  ['unclutter'] = {args={'-root'}},
   ['xautolock'] = {
-    cmd=table.concat({
+    args={
       '-time 5',
       '-detectsleep',
       '-locker /usr/local/bin/xautolocker',
-    }, ' '),
+    },
   },
 })

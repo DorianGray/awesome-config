@@ -3,7 +3,7 @@ pcall(require, "luarocks.loader")
 
 --early init
 local awesome = require 'awesome'
-local error_handler = require 'error_handler'
+local error_handler = require 'util.error_handler'
 error_handler.setup(awesome)
 
 local config = require 'config'
