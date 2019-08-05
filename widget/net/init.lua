@@ -13,7 +13,10 @@ local mouse = require 'mouse'
 local gears = require 'gears'
 local form = require 'widget.form'
 local form_textbox = require 'widget.form.textbox'
+local slideout_panel = require 'widget.slideout_panel'
 
+local static = {}
+static.__index = static
 local net = {}
 net.__index = net
 
@@ -166,8 +169,10 @@ function net:get_area_wifi(iface)
   scan_timer:start()
 end
 
-local function connect_wifi(ssid, security)
-  local panel = mouse.screen.right_panel
+function net:connect_wifi(ssid, security)
+  if self.panel == nil then
+    self.panel = slideout_panel(mouse.screen, 'right')
+  end
   local wifi_widget = wibox.widget({
     layout=wibox.layout.grid,
     homogeneous=true,
@@ -186,7 +191,7 @@ local function connect_wifi(ssid, security)
     row = row + 1
     wifi_widget:add_widget_at(wibox.widget.textbox('Password: '), row, 1)
     local wifi_form = form(function(self)
-      panel:toggle_visible(false)
+      self.panel:toggle_visible(false)
       self:set_active_input(nil)
     end)
     local password_box = form_textbox(wifi_form, 'password')
@@ -196,8 +201,8 @@ local function connect_wifi(ssid, security)
     row = row + 1
   end
 
-  panel:set_content(wifi_widget)
-  panel:toggle_visible(true)
+  self.panel:set_content(wifi_widget)
+  self.panel:toggle_visible(true)
 end
 
 function net:toggle_interface(iface)
@@ -339,7 +344,7 @@ function net:generate_wifi_menu(iface)
     local work = {
       generate_wifi_line(data),
       function()
-        connect_wifi(data.ssid, data.encryption)
+        self:connect_wifi(data.ssid, data.encryption)
         self:menu()
       end,
       icon(math.abs(data.signal), data.frequency, true, true)
@@ -421,7 +426,7 @@ function net:menu()
   self.rendering = false
 end
 
-return function()
+function net:new()
   local self = setmetatable({}, net)
   self.rendering = false
   self.ssid = ''
@@ -471,3 +476,5 @@ return function()
   })
   return self
 end
+
+return setmetatable(static, {__call = net.new})

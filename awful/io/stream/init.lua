@@ -42,7 +42,7 @@ function stream:__call()
 end
 
 function stream:close()
-  return lgi.Gio.Async.start(gears.protected_call)(self.async_close, self)
+  return lgi.Gio.Async.call(gears.protected_call)(self.async_close, self)
 end
 
 function stream:async_close()
@@ -51,7 +51,7 @@ function stream:async_close()
 end
 
 function stream:async_read(bytes)
-  local buf = self.data:read_bytes(bytes or 1024)
+  local buf = self.data:async_read_bytes(bytes or 1024)
   if buf:get_size() > 0 then
     return buf.data
   else
@@ -60,7 +60,7 @@ function stream:async_read(bytes)
 end
 
 function stream:async_read_line()
-  local line = self.data:read_line()
+  local line = self.data:async_read_line()
   if line == nil then
     self:async_close()
   end
@@ -68,11 +68,11 @@ function stream:async_read_line()
 end
 
 function stream:read(bytes)
-  return lgi.Gio.Async.start(gears.protected_call)(self.async_read, self)
+  return lgi.Gio.Async.call(gears.protected_call)(self.async_read, self)
 end
 
 function stream:read_line()
-  return lgi.Gio.Async.start(gears.protected_call)(self.async_read_line, self)
+  return lgi.Gio.Async.call(gears.protected_call)(self.async_read_line, self)
 end
 
 function stream:read_all()

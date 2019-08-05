@@ -6,14 +6,12 @@ local os = require 'os'
 --awesome
 local awful = require 'awful'
 local beautiful = require 'beautiful'
-local gears = require 'gears'
 local root = require 'root'
 local wibox = require 'wibox'
 
 --local
 local autorun = require 'util.autorun'
 local keybindings = require 'keybindings'
-local slideout_panel = require 'widget.slideout_panel'
 local widget = require 'widget'
 
 local unpack = table.unpack or unpack
@@ -56,16 +54,14 @@ for s in screen do
   wibar.layout.right:add(w.power)
 
   wibar.layout.middle:add(w.task:widget(s))
-
-  s.right_panel = slideout_panel(s, 'right')
 end
 
 -- load keybindings
 local binds = keybindings()
--- Set keys
 
 --install default client rules
 table.insert(awful.rules.rules, {
+  rule={},
   properties = {
     border_width = beautiful.border_width,
     border_color = beautiful.border_normal,
@@ -75,6 +71,7 @@ table.insert(awful.rules.rules, {
   },
 })
 
+-- Set widget specific keys
 for _, widget in pairs(w) do
   if type(widget) == 'table' and widget.keys then
     binds:register('global', widget.keys)

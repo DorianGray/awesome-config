@@ -4,27 +4,35 @@ local root = require 'root'
 local gears = require 'gears'
 local awful = require 'awful'
 local process = require 'awful.io.process'
-
 local unpack = table.unpack or unpack
+
 
 local MOD = 'Mod4'
 local ALT = 'Mod1'
 local SHIFT = 'Shift'
 local CONTROL = 'Control'
-local TAB = TAB
+local TAB = 'Tab'
 
-local mt = {
+local static = {
   MOD=MOD,
   ALT=ALT,
   SHIFT=SHIFT,
   CONTROL=CONTROL,
   TAB=TAB,
 }
-mt.__index = mt
+static.__index = static
+local keybindings = {}
+keybindings.__index = keybindings
 
-function mt:__call()
+
+function keybindings:register(namespace, keys)
+  self[namespace] = gears.table.join(self[namespace], unpack(keys))
+end
+
+function keybindings:new()
+  local self = setmetatable({}, keybindings)
   -- Key bindings
-  local globalkeys = gears.table.join(unpack({
+  self.global = gears.table.join(unpack({
     -- screenshot
     awful.key({}, "Print", function ()
       process.run("sleep 0.5 && scrot -s")
@@ -91,7 +99,7 @@ function mt:__call()
     awful.key({CONTROL, ALT}, 'l', beautiful.command.lock), 
   }))
 
-  local clientkeys = gears.table.join(unpack({
+  self.client = gears.table.join(unpack({
     awful.key({MOD,}, 'f', function (c) c.fullscreen = not c.fullscreen end),
     awful.key({ALT,}, 'F4', function (c) c:kill() end),
     awful.key({MOD,}, 'o', function (c) c:move_to_screen(s) end),
@@ -102,15 +110,8 @@ function mt:__call()
       c.maximized_vertical   = not c.maximized_vertical
     end)
   }))
-
-  local data = {
-    client = clientkeys,
-    global = globalkeys,
-  }
-  function data:register(namespace, keys)
-    self[namespace] = gears.table.join(self[namespace], unpack(keys))
-  end
-  return data
+ 
+  return self
 end
 
-return setmetatable({}, mt)
+return setmetatable(static, {__call = keybindings.new})
