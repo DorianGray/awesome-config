@@ -2,6 +2,7 @@ local awful = require 'awful'
 local gears = require 'gears'
 local beautiful = require 'beautiful'
 local wibox = require 'wibox'
+local util = require 'util'
 local lgi = require 'lgi'
 
 local unpack = table.unpack or unpack
@@ -10,41 +11,12 @@ local static = {}
 local task = {}
 task.__index = task
 
+local cache_mt = {
+  __mode='k',
+}
+
 function static.update_callback(self, c, index, objects)
   self:update_icon()
-end
-
-function static.create_callback(self, c, index, objects)
-  local icon = self:get_children_by_id('clienticon')[1]
-  if self.update_icon == nil then
-    local surface = gears.surface.duplicate_surface(c.icon)
-    local width, height = gears.surface.get_size(surface)
-    local pattern = lgi.cairo.Pattern.create_for_surface(surface)
-    local cr = lgi.cairo.Context(surface)
-    cr:rectangle(0, 0, width, height)
-    cr:set_source_rgb(0, 0, 0)
-    cr:set_operator(lgi.cairo.Operator.HSL_SATURATION)
-    cr:mask(pattern)
-
-    local real_client = c
-    local dummy_client = {icon=surface, valid=c.valid, icon_sizes = {{width, height}}, get_icon=function() return surface end}
-    function self:update_icon()
-      if c == client.focus then
-        icon.client = real_client
-      else
-        icon.client = dummy_client
-      end
-    end
-  end
-  local tooltip = awful.tooltip({
-    objects = {self},
-    timer_function = function()
-      return c.name
-    end,
-    align = "left",
-    mode = "outside",
-    preferred_positions = {"left"},
-  })
 end
 
 local instance = nil
@@ -86,12 +58,60 @@ static.buttons = awful.util.table.join(unpack({
 function task:new()
   local self = setmetatable({}, task)
   self.widgets = {}
+  self.unfocused_cache = setmetatable({}, cache_mt)
   return self 
 end
 
 function task:widget(s)
   local widget = self.widgets[s]
-  if not widget then
+  if not widget then 
+    local function create_callback(self, c, index, objects)
+      -- self is the container widget for each client in the tasklist, so we
+      -- need to look at the children to find the icon container by id
+      local icon_widget = self:get_children_by_id('clienticon')[1]
+      -- fake client that returns the grayscale versions of icons
+      local unfocused_client = {
+        valid=c.valid,
+        icon_sizes = c.icon_sizes,
+        get_icon=function(self, index)
+          local icon = c:get_icon(index)
+          local unfocused_cache = widget.unfocused_cache[c]
+          if not unfocused_cache then
+            unfocused_cache = setmetatable({}, cache_mt)
+            widget.unfocused_cache[c] = unfocused_cache
+          end
+          local unfocused_icon = unfocused_cache[icon]
+          if not unfocused_icon then
+            unfocused_icon = gears.surface.duplicate_surface(icon)
+            util.cairo.grayscale(unfocused_icon)
+            util.cairo.darken(unfocused_icon, 0.25)
+            unfocused_cache[icon] = unfocused_icon
+            self.icon_sizes = c.icon_sizes
+            self.valid = c.valid
+          end
+          return unfocused_icon
+        end,
+      }
+
+      function self:update_icon()
+        if c == client.focus then
+          icon_widget.client = c
+        else
+          icon_widget.client = unfocused_client
+        end
+      end
+
+      local tooltip = awful.tooltip({
+        objects = {self},
+        timer_function = function()
+          return c.name
+        end,
+        align = "left",
+        mode = "outside",
+        preferred_positions = {"left"},
+      })
+    end
+
     widget = awful.widget.tasklist({
       screen = s,
       filter = awful.widget.tasklist.filter.currenttags,
@@ -102,12 +122,12 @@ function task:widget(s)
           id = 'clienticon',
           widget = awful.widget.clienticon,
         },
-        create_callback = static.create_callback,
-
+        create_callback = create_callback,
         update_callback = static.update_callback,
         layout = wibox.layout.align.vertical,
       },
     })
+    widget.unfocused_cache = self.unfocused_cache
     self.widgets[s] = widget
   end
   return widget

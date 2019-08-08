@@ -17,4 +17,5 @@ return {
     values = table_values,
   },
   autorun = require 'util.autorun',
+  cairo = require 'util.cairo',
 }
