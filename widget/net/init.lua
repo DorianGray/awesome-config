@@ -1,3 +1,4 @@
+local lfs = require 'lfs'
 local wibox = require 'wibox'
 local awful = require 'awful'
 local beautiful = require 'beautiful'
@@ -19,6 +20,14 @@ local static = {}
 static.__index = static
 local net = {}
 net.__index = net
+
+local function is_wireless(ifname)
+  local attr = lfs.attributes('/sys/class/net/'..ifname..'/wireless')
+  if attr and attr.mode == 'directory' then
+    return true
+  end
+  return false
+end
 
 local function get_net_status()
   local times = 0
@@ -64,14 +73,14 @@ local function parse_ip_link(output, cat_output)
     if iftype:match('LOOPBACK') then
       iftype = 'loopback'
       ifstatus = NET_STATUS['UP']
-    elseif wireless[ifname] then
+    elseif is_wireless(ifname) then
       iftype = 'wireless'
     elseif iftype:match('BROADCAST,MULTICAST') then
       iftype = 'ethernet'
     else
       iftype = 'unknown'
     end
-    groups[#groups+1] = {name = ifname, type = iftype, status = ifstatus}
+    table.insert(groups, {name = ifname, type = iftype, status = ifstatus})
   end
 
   local group = {}
@@ -341,15 +350,18 @@ function net:generate_wifi_menu(iface)
   self:get_area_wifi(iface)
   local wifi_list = {{generate_wifi_line({encryption='⚷ ', ssid='SSID'}, true)}}
   for _, data in pairs(self.wireless[iface.name] or {}) do 
-    local work = {
-      generate_wifi_line(data),
-      function()
-        self:connect_wifi(data.ssid, data.encryption)
-        self:menu()
-      end,
-      icon(math.abs(data.signal), data.frequency, true, true)
-    }
-    table.insert(wifi_list, work)
+    -- hide null networks
+    if data.ssid ~= "\\x00" then
+      local work = {
+        generate_wifi_line(data),
+        function()
+          self:connect_wifi(data.ssid, data.encryption)
+          self:menu()
+        end,
+        icon(math.abs(data.signal), data.frequency, true, true)
+      }
+      table.insert(wifi_list, work)
+    end
   end
 
   table.insert(wifi_list, {'Rescan', function()
