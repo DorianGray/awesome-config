@@ -83,16 +83,8 @@ root.keys(binds.global)
 require 'signals'
 --autorun clients on start
 autorun({ 
-  ['google-chrome-unstable'] = {
-    args={
-      '--enable-vulkan',
-      '--process-per-site',
-      '--high-dpi-support=1',
-      '--force-device-scale-factor=2',
-      '--touch-events=enabled',
-      '--enable-native-gpu-memory-buffers',
-      '--enable-zero-copy',
-    },
+  ['google-chrome'] = {
+    args={},
     match='chrome',
     rules={
       {
@@ -132,7 +124,7 @@ autorun({
   ['unclutter'] = {args={'-root'}},
   ['xautolock'] = {
     args={
-      '-time 5',
+      '-time 10',
       '-detectsleep',
       '-locker /usr/local/bin/xautolocker',
     },

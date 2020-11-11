@@ -15,6 +15,27 @@ local cache_mt = {
   __mode='k',
 }
 
+function static.make_stacked_client_source(instances)
+  local function client_source(s, args)
+    local stacked_clients = setmetatable({}, cache_mt)
+    local clients = client.get(s)
+    for _, c in pairs(clients) do
+      local instance = instances[c.instance]
+      if instance and not instance[c] then
+        instance[c] = false
+      else
+        instances[c.instance] = setmetatable({[c] = true}, cache_mt)
+      end
+      if instances[c.instance][c] then
+        table.insert(stacked_clients, c)
+      end
+    end
+    return client.get(s)--stacked_clients
+  end
+
+  return client_source
+end
+
 function static.update_callback(self, c, index, objects)
   self:update_icon()
 end
@@ -112,8 +133,12 @@ function task:widget(s)
       })
     end
 
+    local stacked_clients = {}
+
+    local instance = nil
     widget = awful.widget.tasklist({
       screen = s,
+      source = static.make_stacked_client_source(stacked_clients),
       filter = awful.widget.tasklist.filter.currenttags,
       buttons = static.buttons,
       layout  = wibox.layout.fixed.horizontal(),
